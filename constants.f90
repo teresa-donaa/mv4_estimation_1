@@ -39,8 +39,8 @@ INTEGER, PARAMETER :: num_states = 4    ! Number of state variables: (m_s,m_z,m_
 !
 ! theta
 !
-INTEGER, PARAMETER :: num_theta_delta_z = num_L-2
-INTEGER, PARAMETER :: num_theta_delta_y = num_H-2
+INTEGER, PARAMETER :: num_theta_delta_z = num_L-1
+INTEGER, PARAMETER :: num_theta_delta_y = num_H-1
 !
 ! psi
 !
@@ -73,7 +73,7 @@ CHARACTER(len=20), PARAMETER :: file_res_to2 = 'res_to2.txt'
 !CHARACTER(len=20), PARAMETER :: file_jmat = 'jmat.txt'
 !CHARACTER(len=20), PARAMETER :: file_invjmat = 'invjmat.txt'
 !CHARACTER(len=20), PARAMETER :: file_dl = 'dl.txt'
-!CHARACTER(len=20), PARAMETER :: file_loglik = 'loglik.txt'
+CHARACTER(len=20), PARAMETER :: file_loglik = 'loglik.txt'
 !
 INTEGER, PARAMETER :: unit_data = 1             
 INTEGER, PARAMETER :: unit_names = 2            
@@ -89,7 +89,7 @@ INTEGER, PARAMETER :: unit_res_to2 = 23
 !INTEGER, PARAMETER :: unit_jmat = 27            
 !INTEGER, PARAMETER :: unit_invjmat = 28     
 !INTEGER, PARAMETER :: unit_dl = 29      
-!INTEGER, PARAMETER :: unit_loglik = 30
+INTEGER, PARAMETER :: unit_loglik = 30
 ! 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ! Declaring constants

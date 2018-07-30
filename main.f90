@@ -5,7 +5,7 @@ USE observations
 USE printing_routines
 USE load_data
 USE starting_points
-!USE maxlik
+USE maxlik
 !USE UTILITIES_DV_DV
 !USE asymptotic_variance
 !
@@ -20,7 +20,7 @@ INTEGER :: itime(8)                         ! Starting date
 INTEGER :: seed(2)                          ! Seed for r.n. generation
 INTEGER :: i_stime                          ! Estimation trial loop index
 REAL(8) :: llcheck
-!REAL(8) :: objf                             ! Loglikelihood function at the optimum
+REAL(8) :: objf                             ! Loglikelihood function at the optimum
 !REAL(8) :: grad(num_theta)                  ! Gradient at optimal theta
 !CHARACTER(len=60) :: task
 !REAL(8) :: v1mat(num_theta,num_theta)       ! Estimated variance matrix of the parameters
@@ -62,6 +62,9 @@ IF (compute_var_as .EQ. 0) THEN
         ! Estimation 
         !
         error_flag = .FALSE.
+!@SP
+CALL loglik_fct(num_theta,theta,objf,grad)
+!@SP
 !        IF (to0 .EQ. 1) CALL loglik_fct(num_theta,theta,objf,grad)
 !        IF (to0 .NE. 1) CALL estimate(i_stime,theta,objf,grad,task)
 !        !
