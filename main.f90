@@ -15,10 +15,9 @@ IMPLICIT NONE
 ! Declaring variables
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
-REAL(8), DIMENSION(num_theta) :: theta_inf, theta_sup
-!CHARACTER (len = 12) :: date_char(3)        ! Not used
-!INTEGER :: itime(8)                         ! Starting date
-!INTEGER :: seed(2)                          ! Seed for r.n. generation
+CHARACTER (len = 12) :: date_char(3)        ! Not used
+INTEGER :: itime(8)                         ! Starting date
+INTEGER :: seed(2)                          ! Seed for r.n. generation
 !INTEGER :: i_stime                          ! Estimation trial loop index
 !REAL(8) :: theta(num_theta)                 ! Parameter vector
 !REAL(8) :: llcheck
@@ -35,6 +34,7 @@ REAL(8), DIMENSION(num_theta) :: theta_inf, theta_sup
 ! Loading the model's specification
 !
 CALL input_model(sel_X)
+CALL CreateVariables()
 !
 IF (compute_var_as .EQ. 0) THEN
     !
@@ -44,13 +44,13 @@ IF (compute_var_as .EQ. 0) THEN
     !
     ! Loading data
     !
-!    CALL input_data ( theta_inf, theta_sup )
-!    !
-!    ! Initializing random number generator
-!    !
-!    CALL date_and_time ( date_char(1), date_char(2), date_char(3), itime )
-!    seed(1) = itime(7)*itime(8)
-!    seed(2) = itime(5)*itime(6)
+    CALL input_data(theta_inf,theta_sup)
+    !
+    ! Initializing random number generator
+    !
+    CALL date_and_time(date_char(1),date_char(2),date_char(3),itime)
+    seed(1) = itime(7)*itime(8)
+    seed(2) = itime(5)*itime(6)
 !    !
 !    ! Starting loop 
 !    !
@@ -101,5 +101,9 @@ END IF
 !    CLOSE(UNIT=unit_vartheta)
 !    !
 !END IF
+!
+CALL DestroyVariables()
+!
+! End of execution
 !
 END PROGRAM main

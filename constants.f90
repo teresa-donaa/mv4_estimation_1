@@ -31,37 +31,29 @@ INTEGER, PARAMETER :: num_N = 24811     ! mv4 data 95-16
 INTEGER, PARAMETER :: num_tot_X = 42    ! Total number of available explanatory variables
 INTEGER, PARAMETER :: num_L = 3         ! Degrees of self-reported risk aversion
 INTEGER, PARAMETER :: num_H = 4         ! Degrees of self-reported planning horizon
-INTEGER, PARAMETER :: num_states = 3    ! Number of state variables: (s,z,y)
+INTEGER, PARAMETER :: num_states = 4    ! Number of state variables: (m_s,m_z,m_y,sigma_s)
 !
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ! Defining the number of parameters
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!!
-!! theta
-!!
-!INTEGER, PARAMETER :: num_theta_beta = &
-!    num_X_pib + num_X_pis + &
-!    num_X_xib + num_X_xis + &
-!    num_X_rho + &
-!    num_X_kappa
-!INTEGER, PARAMETER :: num_theta_omega = num_X_omegab + num_X_omegas
-!INTEGER, PARAMETER :: num_theta_sigma = 2*switch_Sigma1+1*switch_Sigma2
-!INTEGER, PARAMETER :: num_theta_delta = num_L-2
-!INTEGER, PARAMETER :: num_theta = num_theta_beta+num_theta_omega+num_theta_sigma+num_theta_delta
-!!
-!! psi
-!!
-!INTEGER, PARAMETER :: num_psi_m = 6       
-!INTEGER, PARAMETER :: num_psi_omega = 2   
-!INTEGER, PARAMETER :: num_psi_sigma = num_theta_sigma  
-!INTEGER, PARAMETER :: num_psi = num_psi_m+num_psi_omega+num_psi_sigma+num_theta_delta
-!!
-!! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!! Declaring optimization switches
-!! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!! 
-!REAL(8), PARAMETER :: factr = (to0+to1)*1.d+7+(to2+to3)*1.d+1
-!REAL(8), PARAMETER :: pgtol = (to0+to1)*1.0d-4+(to2+to3)*1.d-5
+!
+! theta
+!
+INTEGER, PARAMETER :: num_theta_delta_z = num_L-2
+INTEGER, PARAMETER :: num_theta_delta_y = num_H-2
+!
+! psi
+!
+INTEGER, PARAMETER :: num_psi_m = 3       
+INTEGER, PARAMETER :: num_psi_sigma = 1   
+INTEGER, PARAMETER :: num_psi = num_psi_m+num_psi_sigma+num_theta_delta_z+num_theta_delta_y
+!
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+! Declaring optimization switches
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+! 
+REAL(8), PARAMETER :: factr = (to0+to1)*1.d+7+(to2+to3)*1.d+1
+REAL(8), PARAMETER :: pgtol = (to0+to1)*1.0d-4+(to2+to3)*1.d-5
 !
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ! Declaring parameters about the output files
