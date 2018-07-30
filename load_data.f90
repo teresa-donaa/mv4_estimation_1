@@ -110,7 +110,7 @@ CONTAINS
 	DO n = 1, num_N
         !
         READ (unit_data,*) d(n), ab(n), as(n), riskav(n), horizon(n), tot_xn, peso(n)
-	    PRINT*, 'n = ', n, ' ; peso = ', peso(n)
+        IF ((MOD(n,1000) .EQ. 0) .OR. (n .EQ. num_N)) PRINT*, 'n = ', n, ' ; peso = ', peso(n)
         tot_x(n,2:) = tot_xn
         !
     END DO

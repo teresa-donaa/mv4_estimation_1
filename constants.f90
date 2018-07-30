@@ -16,8 +16,8 @@ INTEGER, PARAMETER :: to3 = 0           ! Varianza
 !                                        ! constrained between (-max_rpibpis , +max_rpibpis)
 !INTEGER, PARAMETER :: switch_Sigma2 = 1 ! = 1: rpibpis = 0
 !!
-!INTEGER, PARAMETER :: num_stime = to0*1+to1*100+to2*1+to3*0
-!                                        ! Total number of completed estimation trials
+INTEGER, PARAMETER :: num_stime = to0*1+to1*100+to2*1+to3*0
+                                        ! Total number of completed estimation trials
 INTEGER, PARAMETER :: compute_var_as = to0*0+to1*0+to2*0+to3*1      
                                         ! Switch to compute the asymptotic variance matrix
 ! 
@@ -65,8 +65,8 @@ CHARACTER(len=30), PARAMETER :: file_model = 'model.txt'
 CHARACTER(len=30), PARAMETER :: file_theta = 'theta.txt'
 !
 CHARACTER(len=20), PARAMETER :: file_res = 'res.txt'
-!CHARACTER(len=20), PARAMETER :: file_res_to1 = 'res_to1.txt'
-!CHARACTER(len=20), PARAMETER :: file_res_to2 = 'res_to2.txt'
+CHARACTER(len=20), PARAMETER :: file_res_to1 = 'res_to1.txt'
+CHARACTER(len=20), PARAMETER :: file_res_to2 = 'res_to2.txt'
 !CHARACTER(len=20), PARAMETER :: file_fin_res = 'fin_res.txt'
 !CHARACTER(len=20), PARAMETER :: file_vartheta = 'vartheta.txt'
 !CHARACTER(len=20), PARAMETER :: file_imat = 'imat.txt'
@@ -81,8 +81,8 @@ INTEGER, PARAMETER :: unit_model = 3
 INTEGER, PARAMETER :: unit_theta = 4
 !
 INTEGER, PARAMETER :: unit_res = 21             
-!INTEGER, PARAMETER :: unit_res_to1 = 22         
-!INTEGER, PARAMETER :: unit_res_to2 = 23         
+INTEGER, PARAMETER :: unit_res_to1 = 22         
+INTEGER, PARAMETER :: unit_res_to2 = 23         
 !INTEGER, PARAMETER :: unit_fin_res = 24         
 !INTEGER, PARAMETER :: unit_vartheta = 25        
 !INTEGER, PARAMETER :: unit_imat = 26            

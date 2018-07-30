@@ -14,7 +14,7 @@ INTEGER :: num_X_m_s, num_X_m_z, num_X_m_y, num_X_sigma_s
 ! Parameters
 !
 INTEGER :: num_theta_beta, num_theta_sigma_s, num_theta
-REAL(8), ALLOCATABLE :: theta_inf(:), theta_sup(:)
+REAL(8), ALLOCATABLE :: theta_inf(:), theta_sup(:), theta(:), grad(:)
 !
 ! Data
 !
@@ -32,8 +32,10 @@ CHARACTER(len = 15), ALLOCATABLE :: names_m_s(:)
 CHARACTER(len = 15), ALLOCATABLE :: names_m_z(:)	
 CHARACTER(len = 15), ALLOCATABLE :: names_m_y(:)
 CHARACTER(len = 15), ALLOCATABLE :: names_sigma_s(:)
-!!
-!LOGICAL, SAVE :: error_flag
+!
+! Other
+!
+LOGICAL :: error_flag
 !
     CONTAINS
 !
@@ -47,7 +49,7 @@ CHARACTER(len = 15), ALLOCATABLE :: names_sigma_s(:)
     !
     ! Beginning execution
     !
-    ALLOCATE(theta_inf(num_theta),theta_sup(num_theta), &
+    ALLOCATE(theta_inf(num_theta),theta_sup(num_theta),theta(num_theta),grad(num_theta), &
         x_m_s(num_N,num_X_m_s),x_m_z(num_N,num_X_m_z),x_m_y(num_N,num_X_m_y),x_sigma_s(num_N,num_X_sigma_s), &
         names_m_s(num_X_m_s),names_m_z(num_X_m_z),names_m_y(num_X_m_y),names_sigma_s(num_X_sigma_s))
     !
@@ -65,7 +67,7 @@ CHARACTER(len = 15), ALLOCATABLE :: names_sigma_s(:)
     !
     ! Beginning execution
     !
-    DEALLOCATE(theta_inf,theta_sup, &
+    DEALLOCATE(theta_inf,theta_sup,theta,grad, &
         x_m_s,x_m_z,x_m_y,x_sigma_s, &
         names_m_s,names_m_z,names_m_y,names_sigma_s)
     !
