@@ -11,11 +11,6 @@ INTEGER, PARAMETER :: to1 = 1           ! Prime stime
 INTEGER, PARAMETER :: to2 = 0           ! Seconde stime
 INTEGER, PARAMETER :: to3 = 0           ! Varianza
 !
-!REAL(8), PARAMETER :: max_rpibpis = 1.d0
-!INTEGER, PARAMETER :: switch_Sigma1 = 0 ! = 1: nonzero rpibpis, 
-!                                        ! constrained between (-max_rpibpis , +max_rpibpis)
-!INTEGER, PARAMETER :: switch_Sigma2 = 1 ! = 1: rpibpis = 0
-!!
 INTEGER, PARAMETER :: num_stime = to0*1+to1*100+to2*1+to3*0
                                         ! Total number of completed estimation trials
 INTEGER, PARAMETER :: compute_var_as = to0*0+to1*0+to2*0+to3*1      
@@ -37,16 +32,30 @@ INTEGER, PARAMETER :: num_states = 4    ! Number of state variables: (m_s,m_z,m_
 ! Defining the number of parameters
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
-! theta
+! variance parameters
 !
-INTEGER, PARAMETER :: num_theta_delta_z = num_L-1
-INTEGER, PARAMETER :: num_theta_delta_y = num_H-1
+INTEGER, PARAMETER :: switch_sigma_z = 0        ! = 1: sigma_z unconstrained; = 0: sigma_z = 1
+INTEGER, PARAMETER :: switch_sigma_y = 0        ! = 1: sigma_y unconstrained; = 0: sigma_y = 1
+INTEGER, PARAMETER :: num_theta_sigma_z_y = switch_sigma_z+switch_sigma_y
+!
+! correlation parameters
+!
+INTEGER, PARAMETER :: switch_rho_sz = 0         ! = 1: rho_sz unconstrained; = 0: rho_sz = 0
+INTEGER, PARAMETER :: switch_rho_sy = 0         ! = 1: rho_sy unconstrained; = 0: rho_sy = 0
+INTEGER, PARAMETER :: switch_rho_zy = 0         ! = 1: rho_zy unconstrained; = 0: rho_zy = 0
+INTEGER, PARAMETER :: num_theta_rho = switch_rho_sz+switch_rho_sy+switch_rho_zy
+!
+! threshold parameters
+!
+INTEGER, PARAMETER :: num_theta_delta_z = num_L-2
+INTEGER, PARAMETER :: num_theta_delta_y = num_H-2
 !
 ! psi
 !
 INTEGER, PARAMETER :: num_psi_m = 3       
-INTEGER, PARAMETER :: num_psi_sigma = 1   
-INTEGER, PARAMETER :: num_psi = num_psi_m+num_psi_sigma+num_theta_delta_z+num_theta_delta_y
+INTEGER, PARAMETER :: num_psi_sigma = 1+num_theta_sigma_z_y
+INTEGER, PARAMETER :: num_psi_rho = num_theta_rho
+INTEGER, PARAMETER :: num_psi = num_psi_m+num_psi_sigma+num_psi_rho+num_theta_delta_z+num_theta_delta_y
 !
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ! Declaring optimization switches

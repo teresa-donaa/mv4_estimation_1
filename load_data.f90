@@ -60,7 +60,7 @@ CONTAINS
     !
     num_theta_beta = num_X_m_s+num_X_m_z+num_X_m_y
     num_theta_sigma_s = num_X_sigma_s
-    num_theta = num_theta_beta+num_theta_sigma_s+num_theta_delta_z+num_theta_delta_y
+    num_theta = num_theta_beta+num_theta_sigma_s+num_theta_sigma_z_y+num_theta_rho+num_theta_delta_z+num_theta_delta_y
     !
     ! Ending execution and returning control
     !
