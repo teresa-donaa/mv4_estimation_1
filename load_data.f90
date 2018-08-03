@@ -52,13 +52,13 @@ CONTAINS
     ! Compute number of covariates in state variables
     !
     num_X_m_s = SUM(sel_X(:,1))
-    num_X_m_z = SUM(sel_X(:,2))
+    num_X_m_q = SUM(sel_X(:,2))
     num_X_m_y = SUM(sel_X(:,3))
     num_X_sigma_s = SUM(sel_X(:,4))
     !
     ! Compute the number of parameters
     !
-    num_theta_beta = num_X_m_s+num_X_m_z+num_X_m_y
+    num_theta_beta = num_X_m_s+num_X_m_q+num_X_m_y
     num_theta_sigma_s = num_X_sigma_s
     num_theta = num_theta_beta+num_theta_sigma_s+num_theta_sigma_z_y+num_theta_rho+num_theta_delta_z+num_theta_delta_y
     !
@@ -132,7 +132,7 @@ CONTAINS
         !
     END DO
 	!
-    ! Select explanatory variables in m_z
+    ! Select explanatory variables in m_q
     !
     i_x = 0
     DO i_tot_x = 1, num_tot_X
@@ -140,7 +140,7 @@ CONTAINS
         IF (sel_X(i_tot_x,2) .EQ. 1) THEN
             !
             i_x = i_x+1
-            x_m_z(:,i_x) = tot_x(:,i_tot_x)
+            x_m_q(:,i_x) = tot_x(:,i_tot_x)
             !
         END IF
         !
@@ -239,7 +239,7 @@ CONTAINS
         !
     END DO
 	!
-    ! Select names of explanatory variables in m_z
+    ! Select names of explanatory variables in m_q
     !
     i_x = 0
     DO i_tot_x = 1, num_tot_X
@@ -247,7 +247,7 @@ CONTAINS
         IF (sel_X(i_tot_x,2) .EQ. 1) THEN
             !
             i_x = i_x+1
-            names_m_z(i_x) = tot_names(i_tot_x)
+            names_m_q(i_x) = tot_names(i_tot_x)
             !
         END IF
         !

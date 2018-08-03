@@ -76,8 +76,7 @@ CONTAINS
     !
     INTEGER :: n
     REAL(8) :: psi(num_psi), pdpsi(num_psi), p, pd(num_theta)
-    !REAL(8) :: omega, p, pd(num_theta), psi(num_psi), pdpsi(num_psi)
-    !CHARACTER(len=1) :: key
+    !REAL(8) :: pd(num_theta), psi(num_psi), pdpsi(num_psi)
     !
     ! Beginning execution
     !
@@ -93,31 +92,36 @@ CONTAINS
         !
         ! Computing individual regime probability and associated gradient
         !
-        CALL compute_psi_parameters(x_m_s(n,:),x_m_z(n,:),x_m_y(n,:),x_sigma_s(n,:), &
+        CALL compute_psi_parameters(x_m_s(n,:),x_m_q(n,:),x_m_y(n,:),x_sigma_s(n,:), &
             theta,psi)
-!        CALL individual_contribution(psi,d(n),as(n),riskav(n),horizon(n),p)
+        CALL individual_contribution(psi,d(n),as(n),riskav(n),horizon(n),p)
 !@SP        CALL INDIVIDUAL_CONTRIBUTION_DV(psi,idmat,d(n),ab(n),as(n),ar(n),c(n),p,pdpsi,num_psi)
-!        !
-!        ! Adding individual contribution to total loglikelihood
-!        !
-!        IF ((p .LE. 0.d0) .OR. (ISNAN(p))) THEN
-!            error_flag = .TRUE.
-!            fc = 1.d10
-!            RETURN
-!        ELSE
-!            fc = fc-normpeso(n)*LOG(p)
-!            !
-!            pd = MATMUL(matrix_dtheta_dpsiprime(x_pib(n,:),x_pis(n,:),x_xib(n,:),x_xis(n,:), &
-!                x_rho(n,:),x_kappa(n,:),x_omegab(n,:),x_omegas(n,:),theta),pdpsi)
-!            gc = gc-normpeso(n)*pd/p
-!        END IF
-!        !
-!        IF (to0 .EQ. 1) THEN
-!            WRITE(unit_loglik,1) n, d(n), c(n), as(n), ar(n), &
-!                p, fc
-!1           FORMAT(I6, " # ", <2>(I3, 1X), "# ", <2>(ES15.8,1X), "# ", &
-!                ES15.8, " # ", ES15.8)
-!        END IF
+        !
+        ! Adding individual contribution to total loglikelihood
+        !
+        IF ((p .LE. 0.d0) .OR. (ISNAN(p))) THEN
+            !
+            error_flag = .TRUE.
+            fc = 1.d10
+            RETURN
+            !
+        ELSE
+            !
+            fc = fc-normpeso(n)*LOG(p)
+            !
+            !pd = MATMUL(matrix_dtheta_dpsiprime(x_pib(n,:),x_pis(n,:),x_xib(n,:),x_xis(n,:), &
+            !    x_rho(n,:),x_kappa(n,:),x_omegab(n,:),x_omegas(n,:),theta),pdpsi)
+            !gc = gc-normpeso(n)*pd/p
+            !
+        END IF
+        !
+        IF (to0 .EQ. 1) THEN
+            !
+            WRITE(unit_loglik,1) n, d(n), as(n), riskav(n), horizon(n), &
+                p, fc
+1           FORMAT(I6, 1X, I3, 1X, ES15.8, 1X, <2>(I3, 1X), <2>(ES15.8, 1X))
+            !
+        END IF
         !
     END DO
     CLOSE(UNIT=unit_loglik)

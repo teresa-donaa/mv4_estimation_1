@@ -9,7 +9,7 @@ IMPLICIT NONE
 ! Explanatory variables 
 !
 INTEGER :: sel_X(num_tot_X,num_states)
-INTEGER :: num_X_m_s, num_X_m_z, num_X_m_y, num_X_sigma_s
+INTEGER :: num_X_m_s, num_X_m_q, num_X_m_y, num_X_sigma_s
 !
 ! Parameters
 !
@@ -21,7 +21,7 @@ REAL(8), ALLOCATABLE :: theta_inf(:), theta_sup(:), theta(:), grad(:)
 INTEGER, DIMENSION(num_N), SAVE :: d, riskav, horizon
 REAL(8), DIMENSION(num_N), SAVE :: ab, as, peso, normpeso
 REAL(8), ALLOCATABLE :: x_m_s(:,:)
-REAL(8), ALLOCATABLE :: x_m_z(:,:)
+REAL(8), ALLOCATABLE :: x_m_q(:,:)
 REAL(8), ALLOCATABLE :: x_m_y(:,:)
 REAL(8), ALLOCATABLE :: x_sigma_s(:,:)
 REAL(8) :: idmat(num_psi,num_psi)                       ! Used for analytic differentiation
@@ -29,7 +29,7 @@ REAL(8) :: idmat(num_psi,num_psi)                       ! Used for analytic diff
 ! Names
 !
 CHARACTER(len = 15), ALLOCATABLE :: names_m_s(:)	
-CHARACTER(len = 15), ALLOCATABLE :: names_m_z(:)	
+CHARACTER(len = 15), ALLOCATABLE :: names_m_q(:)	
 CHARACTER(len = 15), ALLOCATABLE :: names_m_y(:)
 CHARACTER(len = 15), ALLOCATABLE :: names_sigma_s(:)
 !
@@ -50,8 +50,8 @@ LOGICAL :: error_flag
     ! Beginning execution
     !
     ALLOCATE(theta_inf(num_theta),theta_sup(num_theta),theta(num_theta),grad(num_theta), &
-        x_m_s(num_N,num_X_m_s),x_m_z(num_N,num_X_m_z),x_m_y(num_N,num_X_m_y),x_sigma_s(num_N,num_X_sigma_s), &
-        names_m_s(num_X_m_s),names_m_z(num_X_m_z),names_m_y(num_X_m_y),names_sigma_s(num_X_sigma_s))
+        x_m_s(num_N,num_X_m_s),x_m_q(num_N,num_X_m_q),x_m_y(num_N,num_X_m_y),x_sigma_s(num_N,num_X_sigma_s), &
+        names_m_s(num_X_m_s),names_m_q(num_X_m_q),names_m_y(num_X_m_y),names_sigma_s(num_X_sigma_s))
     !
     ! Ending execution and returning control
     !
@@ -68,8 +68,8 @@ LOGICAL :: error_flag
     ! Beginning execution
     !
     DEALLOCATE(theta_inf,theta_sup,theta,grad, &
-        x_m_s,x_m_z,x_m_y,x_sigma_s, &
-        names_m_s,names_m_z,names_m_y,names_sigma_s)
+        x_m_s,x_m_q,x_m_y,x_sigma_s, &
+        names_m_s,names_m_q,names_m_y,names_sigma_s)
     !
     ! Ending execution and returning control
     !

@@ -2,8 +2,8 @@ SUBROUTINE individual_contribution ( psi, dn, asn, riskavn, horizonn, p )
 !
 USE constants
 USE observations
-!USE UTILITIES_DV_DV
-!USE SP_DV_DV
+USE utilities
+USE sp
 !
 IMPLICIT NONE
 ! 
@@ -15,155 +15,598 @@ REAL(8), INTENT(IN) :: asn
 INTEGER, INTENT(IN) :: riskavn              ! Observed self-reported risk attitude
 INTEGER, INTENT(IN) :: horizonn             ! Observed self-reported planning horizon
 REAL(8), INTENT(OUT) :: p                   ! Computed regime probability
+!
+! Declaring external routines
+!
+REAL(8), EXTERNAL :: TVTL                   ! Trivariate normal cdf
+REAL(8), EXTERNAL :: BVND                   ! Bivariate normal survival sdf
+REAL(8), EXTERNAL :: PHID                   ! Univariate normal cdf
 ! 
 ! Declaring local variables
 ! 
-!REAL(8) :: mpib, mpis, xib, xis, rho, kappa, omegab, omegas, sigmapib, sigmapis, rpibpis
-!REAL(8) :: sigmaz, delta(num_theta_delta)
-!REAL(8) :: pd, pc
-!REAL(8) :: mtaub, mtaus, sigma2taub, sigma2taus, sigmataubtaus, logkappa, rho2
-!REAL(8) :: den, den2, mab, mas, sigma2ab, sigma2as, sigmaabas, sigmaab, sigmaas, rabas
-!REAL(8) :: kos, kob, qsrb, qbrs, arg, argb, args, mb, ms, sigma2b, sigma2s, sigmabs, rbs
-!REAL(8) :: taub, taus, sigmataubas, sigmaabtaus, sigmaabs
+REAL(8) :: m_s, m_q, m_z, m_y 
+REAL(8) :: sigma_s, sigma_z, sigma_y
+REAL(8) :: rho_sz, rho_sy, rho_zy
+REAL(8) :: gamma, kappa, q
+REAL(8) :: delta_z(num_L-1), delta_y(num_H-1)
+REAL(8) :: m_zs, m_ys, psi_z, psi_y, rho_psi_zy
+REAL(8) :: p_as, p_zy, eps
+REAL(8) :: limit3(3,4), corr3(3), pcomp(4,2)
 ! 
 ! Beginning execution
 ! 
 ! Computing the b parameters
 ! 
-!CALL compute_b_parameters(psi,mpib,mpis,xib,xis,rho,kappa, &
-!    omegab,omegas,delta,sigmapib,sigmapis,rpibpis,sigmaz)
-!mtaub = mpib-kappa*arn*xib
-!mtaus = mpis-kappa*arn*xis
-!sigma2taub = sigmapib**2
-!sigma2taus = sigmapis**2
-!sigmataubtaus = rpibpis*sigmapib*sigmapis
-!logkappa = LOG(kappa)
-!rho2 = rho**2
-!! 
-!! Computing individual contribution to the loglikelihood - PORTFOLIO CHOICE
-!! 
-!SELECT CASE (dn)
-!    CASE (1)
-!        ! 
-!        ! Computing the density 
-!        ! 
-!        den = kappa*(1.d0-rho2)
-!        den2 = den**2
-!        mab = (mtaub-rho*mtaus)/(den*omegab)
-!        mas = (mtaus-rho*mtaub)/(den*omegas)
-!        sigma2ab = (sigma2taub-2.d0*rho*sigmataubtaus+rho2*sigma2taus)/(den2*omegab**2)
-!        sigma2as = (sigma2taus-2.d0*rho*sigmataubtaus+rho2*sigma2taub)/(den2*omegas**2)
-!        sigmaabas = ((1.d0+rho2)*sigmataubtaus-rho*(sigma2taub+sigma2taus))/(den2*omegab*omegas)
-!        sigmaab = SQRT(sigma2ab)
-!        sigmaas = SQRT(sigma2as)
-!        rabas = sigmaabas/(sigmaab*sigmaas)
-!        pd = pdf_biv_N01((abn-mab)/sigmaab,(asn-mas)/sigmaas,rabas)/(sigmaab*sigmaas)
-!        ! 
-!    CASE (2)
-!        ! 
-!        ! Computing the product of density and probability 
-!        ! 
-!        kos = kappa*omegas
-!        mas = mtaus/kos+rho*omegab*arn/omegas
-!        sigma2as = sigma2taus/kos**2
-!        sigmataubas = sigmataubtaus/kos
-!        taus = kappa*(omegas*asn-omegab*rho*arn)
-!        arg = (rho*taus-kappa*omegab*(1.d0-rho2)*arn-(mtaub+sigmataubas/sigma2as*(asn-mas)))/ &
-!            SQRT(sigma2taub-sigmataubas**2/sigma2as)
-!        pd = 1.d0/SQRT(sigma2as)*pdf_N01((asn-mas)/SQRT(sigma2as))*cdf_N01(arg,.FALSE.)
-!        ! 
-!    CASE (3)
-!        ! 
-!        ! Computing the product of density and probability 
-!        ! 
-!        kob = kappa*omegab
-!        mab = mtaub/kob
-!        sigma2ab = sigma2taub/kob**2
-!        sigmaabtaus = sigmataubtaus/kob
-!        taub = kob*abn
-!        arg = (rho*taub-(mtaus+sigmaabtaus/sigma2ab*(abn-mab)))/SQRT(sigma2taus-sigmaabtaus**2/sigma2ab)
-!        pd = 1.d0/SQRT(sigma2ab)*pdf_N01((abn-mab)/SQRT(sigma2ab))*cdf_N01(arg,.FALSE.)
-!        ! 
-!    CASE (4)
-!        ! 
-!        ! Computing the product of density and probability 
-!        ! 
-!        den = kappa*(omegab**2-2.d0*rho*omegab*omegas+omegas**2)
-!        qsrb = omegas-rho*omegab
-!        qbrs = omegab-rho*omegas
-!        mab = (omegab*mtaub-omegas*mtaus+kappa*omegas*qsrb*(1-arn))/den
-!        ms = qsrb*mtaub+qbrs*mtaus
-!        sigma2ab = (omegab**2*sigma2taub+omegas**2*sigma2taus-2.d0*omegab*omegas*sigmataubtaus)/den**2
-!        sigma2s = qsrb**2*sigma2taub+qbrs**2*sigma2taus+2.d0*qsrb*qbrs*sigmataubtaus
-!        sigmaabs = (omegab*qsrb*sigma2taub-omegas*qbrs*sigma2taus+(omegab**2-omegas**2)*sigmataubtaus)/den
-!        arg = (kappa*omegab*omegas*(1.d0-rho2)*(1.d0-arn)-(ms+sigmaabs/sigma2ab*(abn-mab)))/ &
-!            SQRT(sigma2s-sigmaabs**2/sigma2ab)
-!        pd = 1.d0/SQRT(sigma2ab)*pdf_N01((abn-mab)/SQRT(sigma2ab))*cdf_N01(arg,.TRUE.)
-!        ! 
-!    CASE (5)
-!        ! 
-!        ! Computing the probability 
-!        ! 
-!        argb = (-kappa*omegab*arn-mtaub)/SQRT(sigma2taub)
-!        args = (-kappa*omegab*rho*arn-mtaus)/SQRT(sigma2taus)
-!        rbs = sigmataubtaus/SQRT(sigma2taub*sigma2taus)
-!        pd = cdf_biv_N01(argb,args,rbs)
-!        ! 
-!    CASE (6)
-!        ! 
-!        ! Computing the probability 
-!        ! 
-!        mb = omegab*mtaub-omegas*mtaus
-!        ms = -mtaus
-!        sigma2b = omegab**2*sigma2taub+omegas**2*sigma2taus-2.d0*omegab*omegas*sigmataubtaus
-!        sigma2s = sigma2taus
-!        sigmabs = -omegab*sigmataubtaus+omegas*sigma2taus
-!        argb = (-kappa*omegas*(omegas-rho*omegab)-kappa*omegab*(omegab-rho*omegas)*arn-mb)/SQRT(sigma2b)
-!        args = (-kappa*omegas+kappa*omegab*rho*arn-ms)/SQRT(sigma2s)
-!        rbs = sigmabs/SQRT(sigma2b*sigma2s)
-!        pd = cdf_biv_N01(argb,args,rbs)
-!        ! 
-!    CASE (7)
-!        ! 
-!        ! Computing the probability 
-!        ! 
-!        mb = -mtaub
-!        ms = -omegab*mtaub+omegas*mtaus
-!        sigma2b = sigma2taub
-!        sigma2s = omegab**2*sigma2taub+omegas**2*sigma2taus-2.d0*omegab*omegas*sigmataubtaus
-!        sigmabs = omegab*sigma2taub-omegas*sigmataubtaus
-!        argb = (-kappa*omegab*(1.d0-arn)-mb)/SQRT(sigma2b)
-!        args = (-kappa*omegab*(omegab-rho*omegas)*(1.d0-arn)-ms)/SQRT(sigma2s)
-!        rbs = sigmabs/SQRT(sigma2b*sigma2s)
-!        pd = cdf_biv_N01(argb,args,rbs)
-!        ! 
-!END SELECT
-!! 
-!! Computing individual contribution to the loglikelihood - SELF-REPORTED RISK AVERSION
-!! 
-!SELECT CASE (cn)
-!    ! 
-!    ! 1 "Take substantial financial risks expecting to earn substantial returns" or
-!    !   "Take above average financial risks expecting to earn above average returns"
-!    ! 
-!    CASE (1)
-!        pc = cdf_N01(-logkappa/sigmaz,.FALSE.)
-!    ! 
-!    ! 2 "Take average financial risks expecting to earn average returns"
-!    ! 
-!    CASE (2)
-!        pc = cdf_N01((delta(1)-logkappa)/sigmaz,.FALSE.)-cdf_N01(-logkappa/sigmaz,.FALSE.)
-!    ! 
-!    ! 3 "Not willing to take any financial risks"
-!    ! 
-!    CASE (3)
-!        pc = cdf_N01((delta(1)-logkappa)/sigmaz,.TRUE.)
-!    ! 
-!END SELECT
-!!
-!! Evaluating the integrand
-!!
-!p = pd*pc+minimum_p
+CALL compute_b_parameters(psi,m_s,m_q,m_z,m_y, &
+        sigma_s,sigma_z,sigma_y,rho_sz,rho_sy,rho_zy, &
+        gamma,kappa,q,delta_z,delta_y)
+pcomp = 0.d0
+limit3 = 0.d0
+! 
+! Computing individual contribution to the loglikelihood
+! 
+SELECT CASE (dn)
+    !
+    CASE (1)   ! 0 < as < 1          
+        ! 
+        ! density of a_s
+        ! 
+        p_as = pdf_N01((q*asn-m_s)/sigma_s)/sigma_s
+        !
+        ! probability of self-reported risk aversion and planning horizon
+        !
+        m_zs = m_z-rho_sz*sigma_z/sigma_s*(m_s-q*asn)
+        m_ys = m_y-rho_sy*sigma_y/sigma_s*(m_s-q*asn)
+        psi_z = sigma_z*SQRT(1.d0-rho_sz**2)
+        psi_y = sigma_y*SQRT(1.d0-rho_sy**2)
+        rho_psi_zy = (rho_zy-rho_sz*rho_sy)/(SQRT(1.d0-rho_sz**2)*SQRT(1.d0-rho_sy**2))
+        !
+        IF ((riskavn .EQ. 1) .AND. (horizonn .EQ. 1)) THEN
+            !
+            limit3(2,1) = (delta_z(1)-m_zs)/psi_z
+            limit3(3,1) = (delta_y(1)-m_ys)/psi_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy)
+            pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_psi_zy)
+            !
+        ELSE IF ((riskavn .EQ. 1) .AND. (horizonn .EQ. 2)) THEN
+            !
+            limit3(2,1) = (delta_z(1)-m_zs)/psi_z
+            limit3(3,1) = (delta_y(2)-m_ys)/psi_y
+            limit3(2,3) = (delta_z(1)-m_zs)/psi_z
+            limit3(3,3) = (delta_y(1)-m_ys)/psi_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy)
+            pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
+            pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_psi_zy)
+            !
+        ELSE IF ((riskavn .EQ. 1) .AND. (horizonn .EQ. 3)) THEN
+            !
+            limit3(2,1) = (delta_z(1)-m_zs)/psi_z
+            limit3(3,1) = (delta_y(3)-m_ys)/psi_y
+            limit3(2,3) = (delta_z(1)-m_zs)/psi_z
+            limit3(3,3) = (delta_y(2)-m_ys)/psi_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy)
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy)
+            pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_psi_zy)
+            pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_psi_zy)
+            !
+        ELSE IF ((riskavn .EQ. 1) .AND. (horizonn .EQ. 4)) THEN
+            !
+            limit3(2,1) = (delta_z(1)-m_zs)/psi_z
+            limit3(2,3) = (delta_z(1)-m_zs)/psi_z
+            limit3(3,3) = (delta_y(3)-m_ys)/psi_y
+!@SP            pcomp(1,1) = cdf_N01(limit3(2,1),.FALSE.) 
+            pcomp(1,1) = PHID(limit3(2,1)) 
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy)
+            pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_psi_zy)
+            !
+        ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 1)) THEN
+            !
+            limit3(2,1) = (delta_z(2)-m_zs)/psi_z
+            limit3(3,1) = (delta_y(1)-m_ys)/psi_y
+            limit3(2,2) = (delta_z(1)-m_zs)/psi_z
+            limit3(3,2) = (delta_y(1)-m_ys)/psi_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy)
+            pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
+            pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_psi_zy)
+            !
+        ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 2)) THEN
+            !
+            limit3(2,1) = (delta_z(2)-m_zs)/psi_z
+            limit3(3,1) = (delta_y(2)-m_ys)/psi_y
+            limit3(2,2) = (delta_z(1)-m_zs)/psi_z
+            limit3(3,2) = (delta_y(2)-m_ys)/psi_y
+            limit3(2,3) = (delta_z(2)-m_zs)/psi_z
+            limit3(3,3) = (delta_y(1)-m_ys)/psi_y
+            limit3(2,4) = (delta_z(1)-m_zs)/psi_z
+            limit3(3,4) = (delta_y(1)-m_ys)/psi_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
+!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy) 
+            pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
+            pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
+            pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
+            pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_psi_zy) 
+            !
+        ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 3)) THEN
+            !
+            limit3(2,1) = (delta_z(2)-m_zs)/psi_z
+            limit3(3,1) = (delta_y(3)-m_ys)/psi_y
+            limit3(2,2) = (delta_z(1)-m_zs)/psi_z
+            limit3(3,2) = (delta_y(3)-m_ys)/psi_y
+            limit3(2,3) = (delta_z(2)-m_zs)/psi_z
+            limit3(3,3) = (delta_y(2)-m_ys)/psi_y
+            limit3(2,4) = (delta_z(1)-m_zs)/psi_z
+            limit3(3,4) = (delta_y(2)-m_ys)/psi_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy)
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
+!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy) 
+            pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
+            pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_psi_zy)
+            pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
+            pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_psi_zy) 
+            !
+        ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 4)) THEN
+            !
+            limit3(2,1) = (delta_z(2)-m_zs)/psi_z
+            limit3(2,2) = (delta_z(1)-m_zs)/psi_y
+            limit3(2,3) = (delta_z(2)-m_zs)/psi_z
+            limit3(3,3) = (delta_y(3)-m_ys)/psi_y
+            limit3(2,4) = (delta_z(1)-m_zs)/psi_z
+            limit3(3,4) = (delta_y(3)-m_ys)/psi_y
+!@SP            pcomp(1,1) = cdf_N01(limit3(2,1),.FALSE.) 
+!@SP            pcomp(2,1) = cdf_N01(limit3(2,2),.FALSE.) 
+            pcomp(1,1) = PHID(limit3(2,1)) 
+            pcomp(2,1) = PHID(limit3(2,2)) 
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
+!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy)
+            pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
+            pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_psi_zy)
+            !
+        ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 1)) THEN
+            !
+            limit3(3,1) = (delta_y(1)-m_ys)/psi_y
+            limit3(2,2) = (delta_z(2)-m_zs)/psi_z
+            limit3(3,2) = (delta_y(1)-m_ys)/psi_y
+!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
+            pcomp(1,1) = PHID(limit3(3,1)) 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
+            pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
+            !
+        ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 2)) THEN
+            !
+            limit3(3,1) = (delta_y(2)-m_ys)/psi_y
+            limit3(2,2) = (delta_z(2)-m_zs)/psi_z
+            limit3(3,2) = (delta_y(2)-m_ys)/psi_y
+            limit3(3,3) = (delta_y(1)-m_ys)/psi_y
+            limit3(2,4) = (delta_z(2)-m_zs)/psi_z
+            limit3(3,4) = (delta_y(1)-m_ys)/psi_y
+!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
+            pcomp(1,1) = PHID(limit3(3,1)) 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
+            pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
+!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
+            pcomp(3,1) = PHID(limit3(3,3)) 
+!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy)
+            pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_psi_zy)
+            !
+        ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 3)) THEN
+            !
+            limit3(3,1) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,2) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,2) = (delta_y(3)-m_y)/sigma_y
+            limit3(3,3) = (delta_y(2)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(2)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
+            pcomp(1,1) = PHID(limit3(3,1)) 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
+            pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
+!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
+            pcomp(3,1) = PHID(limit3(3,3)) 
+!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy)
+            pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_psi_zy)
+            !
+        ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 4)) THEN
+            !
+            limit3(2,2) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(3)-m_y)/sigma_y
+            pcomp(1,1) = 1.d0 
+!@SP            pcomp(2,1) = cdf_N01(limit3(2,2),.FALSE.)
+!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
+            pcomp(2,1) = PHID(limit3(2,2))
+            pcomp(3,1) = PHID(limit3(3,3)) 
+!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy)
+            pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_psi_zy)
+            !
+        END IF
+        !
+        p_zy = pcomp(1,1)-pcomp(2,1)-pcomp(3,1)+pcomp(4,1)
+        ! 
+    CASE (2)   ! as = 0
+        ! 
+        ! joint probability
+        ! 
+        p_zy = 1.d0
+        corr3 = (/ rho_sz, rho_sy, rho_zy /)
+        limit3(1,:) = -m_s/sigma_s
+        eps = 1.D-13
+        !
+        IF ((riskavn .EQ. 1) .AND. (horizonn .EQ. 1)) THEN
+            !
+            limit3(2,1) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,1) = (delta_y(1)-m_y)/sigma_y
+            pcomp(1,1) = TVTL(0,limit3(:,1),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 1) .AND. (horizonn .EQ. 2)) THEN
+            !
+            limit3(2,1) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,1) = (delta_y(2)-m_y)/sigma_y
+            limit3(2,3) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(1)-m_y)/sigma_y
+            pcomp(1,1) = TVTL(0,limit3(:,1),corr3,eps)
+            pcomp(3,1) = TVTL(0,limit3(:,3),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 1) .AND. (horizonn .EQ. 3)) THEN
+            !
+            limit3(2,1) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,1) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,3) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(2)-m_y)/sigma_y
+            pcomp(1,1) = TVTL(0,limit3(:,1),corr3,eps)
+            pcomp(3,1) = TVTL(0,limit3(:,3),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 1) .AND. (horizonn .EQ. 4)) THEN
+            !
+            limit3(2,1) = (delta_z(1)-m_z)/sigma_z
+            limit3(2,3) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(3)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(2,1),rho_sz) 
+            pcomp(1,1) = BVND(-limit3(1,1),-limit3(2,1),rho_sz) 
+            pcomp(3,1) = TVTL(0,limit3(:,3),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 1)) THEN
+            !
+            limit3(2,1) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,1) = (delta_y(1)-m_y)/sigma_y
+            limit3(2,2) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,2) = (delta_y(1)-m_y)/sigma_y
+            pcomp(1,1) = TVTL(0,limit3(:,1),corr3,eps)
+            pcomp(2,1) = TVTL(0,limit3(:,2),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 2)) THEN
+            !
+            limit3(2,1) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,1) = (delta_y(2)-m_y)/sigma_y
+            limit3(2,2) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,2) = (delta_y(2)-m_y)/sigma_y
+            limit3(2,3) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(1)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(1)-m_y)/sigma_y
+            pcomp(1,1) = TVTL(0,limit3(:,1),corr3,eps)
+            pcomp(2,1) = TVTL(0,limit3(:,2),corr3,eps) 
+            pcomp(3,1) = TVTL(0,limit3(:,3),corr3,eps)
+            pcomp(4,1) = TVTL(0,limit3(:,4),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 3)) THEN
+            !
+            limit3(2,1) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,1) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,2) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,2) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,3) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(2)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(2)-m_y)/sigma_y
+            pcomp(1,1) = TVTL(0,limit3(:,1),corr3,eps)
+            pcomp(2,1) = TVTL(0,limit3(:,2),corr3,eps) 
+            pcomp(3,1) = TVTL(0,limit3(:,3),corr3,eps)
+            pcomp(4,1) = TVTL(0,limit3(:,4),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 4)) THEN
+            !
+            limit3(2,1) = (delta_z(2)-m_z)/sigma_z
+            limit3(2,2) = (delta_z(1)-m_z)/sigma_z
+            limit3(2,3) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(3)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(2,1),rho_sz) 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(1,2),-limit3(2,2),rho_sz) 
+            pcomp(1,1) = BVND(-limit3(1,1),-limit3(2,1),rho_sz) 
+            pcomp(2,1) = BVND(-limit3(1,2),-limit3(2,2),rho_sz) 
+            pcomp(3,1) = TVTL(0,limit3(:,3),corr3,eps)
+            pcomp(4,1) = TVTL(0,limit3(:,4),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 1)) THEN
+            !
+            limit3(3,1) = (delta_y(1)-m_y)/sigma_y
+            limit3(2,2) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,2) = (delta_y(1)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
+            pcomp(1,1) = BVND(-limit3(1,1),-limit3(3,1),rho_sy) 
+            pcomp(2,1) = TVTL(0,limit3(:,2),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 2)) THEN
+            !
+            limit3(3,1) = (delta_y(2)-m_y)/sigma_y
+            limit3(2,2) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,2) = (delta_y(2)-m_y)/sigma_y
+            limit3(3,3) = (delta_y(1)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(1)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
+            pcomp(1,1) = BVND(-limit3(1,1),-limit3(3,1),rho_sy) 
+            pcomp(2,1) = TVTL(0,limit3(:,2),corr3,eps)
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
+            pcomp(3,1) = BVND(-limit3(1,3),-limit3(3,3),rho_sy) 
+            pcomp(4,1) = TVTL(0,limit3(:,4),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 3)) THEN
+            !
+            limit3(3,1) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,2) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,2) = (delta_y(3)-m_y)/sigma_y
+            limit3(3,3) = (delta_y(2)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(2)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
+            pcomp(1,1) = BVND(-limit3(1,1),-limit3(3,1),rho_sy) 
+            pcomp(2,1) = TVTL(0,limit3(:,2),corr3,eps)
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
+            pcomp(3,1) = BVND(-limit3(1,3),-limit3(3,3),rho_sy) 
+            pcomp(4,1) = TVTL(0,limit3(:,4),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 4)) THEN
+            !
+            limit3(2,2) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(3)-m_y)/sigma_y
+            pcomp(1,1) = 1.d0 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(1,2),-limit3(2,2),rho_sz) 
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
+            pcomp(2,1) = BVND(-limit3(1,2),-limit3(2,2),rho_sz) 
+            pcomp(3,1) = BVND(-limit3(1,3),-limit3(3,3),rho_sy) 
+            pcomp(4,1) = TVTL(0,limit3(:,4),corr3,eps)
+            !
+        END IF
+        !
+        p_as = pcomp(1,1)-pcomp(2,1)-pcomp(3,1)+pcomp(4,1)
+        ! 
+    CASE (3)   ! as = 1
+        ! 
+        ! joint probability
+        ! 
+        p_zy = 1.d0
+        corr3 = (/ rho_sz, rho_sy, rho_zy /)
+        limit3(1,:) = (q-m_s)/sigma_s
+        eps = 1.D-13
+        !
+        IF ((riskavn .EQ. 1) .AND. (horizonn .EQ. 1)) THEN
+            !
+            limit3(2,1) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,1) = (delta_y(1)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
+            pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_zy) 
+            pcomp(1,2) = TVTL(0,limit3(:,1),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 1) .AND. (horizonn .EQ. 2)) THEN
+            !
+            limit3(2,1) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,1) = (delta_y(2)-m_y)/sigma_y
+            limit3(2,3) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(1)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
+            pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_zy) 
+            pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_zy) 
+            pcomp(1,2) = TVTL(0,limit3(:,1),corr3,eps)
+            pcomp(3,2) = TVTL(0,limit3(:,3),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 1) .AND. (horizonn .EQ. 3)) THEN
+            !
+            limit3(2,1) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,1) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,3) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(2)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
+            pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_zy) 
+            pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_zy) 
+            pcomp(1,2) = TVTL(0,limit3(:,1),corr3,eps)
+            pcomp(3,2) = TVTL(0,limit3(:,3),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 1) .AND. (horizonn .EQ. 4)) THEN
+            !
+            limit3(2,1) = (delta_z(1)-m_z)/sigma_z
+            limit3(2,3) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(3)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_N01(limit3(2,1),.FALSE.) 
+            pcomp(1,1) = PHID(limit3(2,1)) 
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
+!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(2,1),rho_sz)
+            pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_zy) 
+            pcomp(1,2) = BVND(-limit3(1,1),-limit3(2,1),rho_sz)
+            pcomp(3,2) = TVTL(0,limit3(:,3),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 1)) THEN
+            !
+            limit3(2,1) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,1) = (delta_y(1)-m_y)/sigma_y
+            limit3(2,2) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,2) = (delta_y(1)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
+            pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_zy) 
+            pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_zy) 
+            pcomp(1,2) = TVTL(0,limit3(:,1),corr3,eps)
+            pcomp(2,2) = TVTL(0,limit3(:,2),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 2)) THEN
+            !
+            limit3(2,1) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,1) = (delta_y(2)-m_y)/sigma_y
+            limit3(2,2) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,2) = (delta_y(2)-m_y)/sigma_y
+            limit3(2,3) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(1)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(1)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
+!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
+            pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_zy) 
+            pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_zy) 
+            pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_zy) 
+            pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_zy) 
+            pcomp(1,2) = TVTL(0,limit3(:,1),corr3,eps)
+            pcomp(2,2) = TVTL(0,limit3(:,2),corr3,eps) 
+            pcomp(3,2) = TVTL(0,limit3(:,3),corr3,eps)
+            pcomp(4,2) = TVTL(0,limit3(:,4),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 3)) THEN
+            !
+            limit3(2,1) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,1) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,2) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,2) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,3) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(2)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(2)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
+!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
+            pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_zy) 
+            pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_zy) 
+            pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_zy) 
+            pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_zy) 
+            pcomp(1,2) = TVTL(0,limit3(:,1),corr3,eps)
+            pcomp(2,2) = TVTL(0,limit3(:,2),corr3,eps) 
+            pcomp(3,2) = TVTL(0,limit3(:,3),corr3,eps)
+            pcomp(4,2) = TVTL(0,limit3(:,4),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 4)) THEN
+            !
+            limit3(2,1) = (delta_z(2)-m_z)/sigma_z
+            limit3(2,2) = (delta_z(1)-m_z)/sigma_z
+            limit3(2,3) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(1)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(3)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_N01(limit3(2,1),.FALSE.) 
+!@SP            pcomp(2,1) = cdf_N01(limit3(2,2),.FALSE.) 
+            pcomp(1,1) = PHID(limit3(2,1)) 
+            pcomp(2,1) = PHID(limit3(2,2)) 
+!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
+!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
+!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(2,1),rho_sz) 
+!@SP            pcomp(2,2) = cdf_biv_N01(-limit3(1,2),-limit3(2,2),rho_sz) 
+            pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_zy) 
+            pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_zy) 
+            pcomp(1,2) = BVND(-limit3(1,1),-limit3(2,1),rho_sz) 
+            pcomp(2,2) = BVND(-limit3(1,2),-limit3(2,2),rho_sz) 
+            pcomp(3,2) = TVTL(0,limit3(:,3),corr3,eps)
+            pcomp(4,2) = TVTL(0,limit3(:,4),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 1)) THEN
+            !
+            limit3(3,1) = (delta_y(1)-m_y)/sigma_y
+            limit3(2,2) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,2) = (delta_y(1)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
+            pcomp(1,1) = PHID(limit3(3,1)) 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
+!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
+            pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_zy) 
+            pcomp(1,2) = BVND(-limit3(1,1),-limit3(3,1),rho_sy) 
+            pcomp(2,2) = TVTL(0,limit3(:,2),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 2)) THEN
+            !
+            limit3(3,1) = (delta_y(2)-m_y)/sigma_y
+            limit3(2,2) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,2) = (delta_y(2)-m_y)/sigma_y
+            limit3(3,3) = (delta_y(1)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(1)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
+            pcomp(1,1) = PHID(limit3(3,1)) 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
+            pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_zy) 
+!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
+            pcomp(3,1) = PHID(limit3(3,3)) 
+!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy)
+!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
+            pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_zy)
+            pcomp(1,2) = BVND(-limit3(1,1),-limit3(3,1),rho_sy) 
+            pcomp(2,2) = TVTL(0,limit3(:,2),corr3,eps)
+!@SP            pcomp(3,2) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
+            pcomp(3,2) = BVND(-limit3(1,3),-limit3(3,3),rho_sy) 
+            pcomp(4,2) = TVTL(0,limit3(:,4),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 3)) THEN
+            !
+            limit3(3,1) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,2) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,2) = (delta_y(3)-m_y)/sigma_y
+            limit3(3,3) = (delta_y(2)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(2)-m_y)/sigma_y
+!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
+            pcomp(1,1) = PHID(limit3(3,1)) 
+!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
+            pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_zy) 
+!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
+            pcomp(3,1) = PHID(limit3(3,3)) 
+!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
+!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy)
+            pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_zy) 
+            pcomp(1,2) = BVND(-limit3(1,1),-limit3(3,1),rho_sy)
+            pcomp(2,2) = TVTL(0,limit3(:,2),corr3,eps)
+!@SP            pcomp(3,2) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
+            pcomp(3,2) = BVND(-limit3(1,3),-limit3(3,3),rho_sy) 
+            pcomp(4,2) = TVTL(0,limit3(:,4),corr3,eps)
+            !
+        ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 4)) THEN
+            !
+            limit3(2,2) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,3) = (delta_y(3)-m_y)/sigma_y
+            limit3(2,4) = (delta_z(2)-m_z)/sigma_z
+            limit3(3,4) = (delta_y(3)-m_y)/sigma_y
+            pcomp(1,1) = 1.d0 
+!@SP            pcomp(2,1) = cdf_N01(limit3(2,2),.FALSE.) 
+!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
+            pcomp(2,1) = PHID(limit3(2,2)) 
+            pcomp(3,1) = PHID(limit3(3,3)) 
+!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
+            pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_zy) 
+!@SP            pcomp(1,2) = cdf_N01(limit3(1,1),.FALSE.)
+            pcomp(1,2) = PHID(limit3(1,1))
+!@SP            pcomp(2,2) = cdf_biv_N01(-limit3(1,2),-limit3(2,2),rho_sz) 
+!@SP            pcomp(3,2) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
+            pcomp(2,2) = BVND(-limit3(1,2),-limit3(2,2),rho_sz) 
+            pcomp(3,2) = BVND(-limit3(1,3),-limit3(3,3),rho_sy) 
+            pcomp(4,2) = TVTL(0,limit3(:,4),corr3,eps)
+            !
+        END IF
+        !
+        p_as = pcomp(1,1)-pcomp(2,1)-pcomp(3,1)+pcomp(4,1)-(pcomp(1,2)-pcomp(2,2)-pcomp(3,2)+pcomp(4,2))
+        ! 
+END SELECT
+!
+! Evaluating the integrand
+!
+p = p_as*p_zy+minimum_p
 ! 
 ! Ending subroutine and returning execution
 ! 

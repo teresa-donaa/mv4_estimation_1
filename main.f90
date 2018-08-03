@@ -47,9 +47,12 @@ IF (compute_var_as .EQ. 0) THEN
     !
     ! Initializing random number generator
     !
-    CALL date_and_time(date_char(1),date_char(2),date_char(3),itime)
-    seed(1) = itime(7)*itime(8)
-    seed(2) = itime(5)*itime(6)
+!@SP
+!    CALL date_and_time(date_char(1),date_char(2),date_char(3),itime)
+!    seed(1) = itime(7)*itime(8)
+!    seed(2) = itime(5)*itime(6)
+    seed = 1
+!@SP
     !
     ! Starting loop 
     !
@@ -64,6 +67,7 @@ IF (compute_var_as .EQ. 0) THEN
         error_flag = .FALSE.
 !@SP
 CALL loglik_fct(num_theta,theta,objf,grad)
+PRINT*, 'i_stime = ', i_stime, ' ; objf = ', objf
 !@SP
 !        IF (to0 .EQ. 1) CALL loglik_fct(num_theta,theta,objf,grad)
 !        IF (to0 .NE. 1) CALL estimate(i_stime,theta,objf,grad,task)
