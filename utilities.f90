@@ -275,110 +275,144 @@ CONTAINS
 ! 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ! 
-!    FUNCTION matrix_dtheta_dpsiprime ( xn_pib, xn_pis, xn_xib, xn_xis, &
-!        xn_rho, xn_kappa, xn_omegab, xn_omegas, theta )
-!    ! 
-!    ! Computes the matrix d theta / d psi',
-!    ! dove theta è il vettore dei parametri rispetto ai quali si minimizza - log(L)
-!    ! e psi è il vettore dei parametri rispetto ai quali si deriva
-!    ! 
-!    ! Declaring dummy variables
-!    ! 
-!    REAL(8), INTENT(IN) :: xn_pib(num_X_pib)    
-!    REAL(8), INTENT(IN) :: xn_pis(num_X_pis)    
-!    REAL(8), INTENT(IN) :: xn_xib(num_X_xib)
-!    REAL(8), INTENT(IN) :: xn_xis(num_X_xis)
-!    REAL(8), INTENT(IN) :: xn_rho(num_X_rho)
-!    REAL(8), INTENT(IN) :: xn_kappa(num_X_kappa)
-!    REAL(8), INTENT(IN) :: xn_omegab(num_X_omegab)
-!    REAL(8), INTENT(IN) :: xn_omegas(num_X_omegas)
-!    REAL(8), INTENT(IN) :: theta(num_theta)
-!    !
-!    ! Declaring local variables
-!    !
-!    INTEGER :: il, iu
-!    ! 
-!    ! Declaring function type
-!    ! 
-!    REAL(8) :: matrix_dtheta_dpsiprime(num_theta,num_psi)
-!    ! 
-!    ! Beginning execution
-!    ! 
-!    ! Initialising matrix_dtheta_dpsiprime
-!    ! 
-!    matrix_dtheta_dpsiprime = 0.d0
-!    !
-!    ! betapib
-!    !
-!    il = 1
-!    iu = num_X_pib
-!    matrix_dtheta_dpsiprime(il:iu,1) = xn_pib
-!    !
-!    ! betapis
-!    !
-!    il = iu+1
-!    iu = iu+num_X_pis
-!    matrix_dtheta_dpsiprime(il:iu,2) = xn_pis
-!    !
-!    ! betaxib
-!    !
-!    il = iu+1
-!    iu = iu+num_X_xib
-!    matrix_dtheta_dpsiprime(il:iu,3) = xn_xib
-!    !
-!    ! betaxis
-!    !
-!    il = iu+1
-!    iu = iu+num_X_xis
-!    matrix_dtheta_dpsiprime(il:iu,4) = xn_xis
-!    !
-!    ! betarho
-!    !
-!    il = iu+1
-!    iu = iu+num_X_rho
-!    matrix_dtheta_dpsiprime(il:iu,5) = xn_rho
-!    !
-!    ! betakappa
-!    !
-!    il = iu+1
-!    iu = num_theta_beta
-!    matrix_dtheta_dpsiprime(il:iu,num_psi_m) = xn_kappa
-!    !
-!    ! omegab
-!    !
-!    il = iu+1
-!    iu = iu+num_X_omegab
-!    matrix_dtheta_dpsiprime(il:iu,num_psi_m+1) = xn_omegab
-!    !
-!    ! omegas
-!    !
-!    il = iu+1
-!    iu = num_theta_beta+num_theta_omega
-!    matrix_dtheta_dpsiprime(il:iu,num_psi_m+num_psi_omega) = xn_omegas
-!    !
-!    ! sigmapis
-!    !
-!    iu = iu+1
-!    matrix_dtheta_dpsiprime(iu,num_psi_m+num_psi_omega+1) = 1.d0
-!    !
-!    ! rpibpis
-!    !
-!    IF (switch_Sigma1 .EQ. 1) THEN
-!        iu = num_theta_beta+num_theta_omega+num_theta_sigma
-!        matrix_dtheta_dpsiprime(iu,num_psi_m+num_psi_omega+num_psi_sigma) = 1.d0
-!    END IF
-!    !
-!    ! delta
-!    !
-!    iu = num_theta
-!    matrix_dtheta_dpsiprime(iu,num_psi) = 1.d0
-!    ! 
-!    ! Ending execution and returning control
-!    ! 
-!    END FUNCTION matrix_dtheta_dpsiprime
-!! 
-!! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!! 
+    FUNCTION matrix_dtheta_dpsiprime ( xn_m_s, xn_m_q, xn_m_y, xn_sigma_s, theta )
+    ! 
+    ! Computes the matrix d theta / d psi',
+    ! where theta are the parameters w.r.t. which we minimize -log(L),
+    ! and psi are the parameters w.r.t. which we differentiate
+     !
+	IMPLICIT NONE
+	!
+    ! Declaring dummy variables
+    ! 
+    REAL(8), INTENT(IN) :: xn_m_s(num_X_m_s)    
+    REAL(8), INTENT(IN) :: xn_m_q(num_X_m_q)    
+    REAL(8), INTENT(IN) :: xn_m_y(num_X_m_y)
+    REAL(8), INTENT(IN) :: xn_sigma_s(num_X_sigma_s)
+    REAL(8), INTENT(IN) :: theta(num_theta)     ! Deep parameters
+    !
+    ! Declaring local variables
+    !
+    INTEGER :: il, iu, ipsi, i
+    ! 
+    ! Declaring function type
+    ! 
+    REAL(8) :: matrix_dtheta_dpsiprime(num_theta,num_psi)
+    ! 
+    ! Beginning execution
+    ! 
+    ! Initialising matrix_dtheta_dpsiprime
+    ! 
+    matrix_dtheta_dpsiprime = 0.d0
+    !
+    ! beta_m_s
+    !
+    il = 1
+    iu = num_X_m_s
+    matrix_dtheta_dpsiprime(il:iu,1) = xn_m_s
+    !
+    ! beta_m_q
+    !
+    il = iu+1
+    iu = iu+num_X_m_q
+    matrix_dtheta_dpsiprime(il:iu,2) = xn_m_q
+    !
+    ! beta_m_y
+    !
+    il = iu+1
+    iu = iu+num_X_m_y
+    matrix_dtheta_dpsiprime(il:iu,3) = xn_m_y
+    !
+    ! beta_sigma_s
+    !
+    il = iu+1
+    iu = iu+num_X_sigma_s
+    matrix_dtheta_dpsiprime(il:iu,4) = xn_sigma_s
+    ipsi = 4
+    !
+    ! sigma_z
+    !
+    IF (switch_sigma_z .EQ. 1) THEN
+        !
+        il = iu+1
+        iu = il
+        ipsi = ipsi+1
+        matrix_dtheta_dpsiprime(iu,ipsi) = 1.d0
+        !
+    END IF
+    !
+    ! sigma_y
+    !
+    IF (switch_sigma_y .EQ. 1) THEN
+        !
+        il = iu+1
+        iu = il
+        ipsi = ipsi+1
+        matrix_dtheta_dpsiprime(iu,ipsi) = 1.d0
+        !
+    END IF
+    !
+    ! rho_sz
+    !
+    IF (switch_rho_sz .EQ. 1) THEN
+        !
+        il = iu+1
+        iu = il
+        ipsi = ipsi+1
+        matrix_dtheta_dpsiprime(iu,ipsi) = 1.d0
+        !
+    END IF
+    !
+    ! rho_sy
+    !
+    IF (switch_rho_sy .EQ. 1) THEN
+        !
+        il = iu+1
+        iu = il
+        ipsi = ipsi+1
+        matrix_dtheta_dpsiprime(iu,ipsi) = 1.d0
+        !
+    END IF
+    !
+    ! rho_zy
+    !
+    IF (switch_rho_zy .EQ. 1) THEN
+        !
+        il = iu+1
+        iu = il
+        ipsi = ipsi+1
+        matrix_dtheta_dpsiprime(iu,ipsi) = 1.d0
+        !
+    END IF
+    !
+    ! delta_z
+    !
+    DO i = 1, num_theta_delta_z
+        !
+        il = iu+1
+        iu = il
+        ipsi = ipsi+1
+        matrix_dtheta_dpsiprime(iu,ipsi) = 1.d0
+        !
+    END DO
+    !
+    ! delta_z
+    !
+    DO i = 1, num_theta_delta_y
+        !
+        il = iu+1
+        iu = il
+        ipsi = ipsi+1
+        matrix_dtheta_dpsiprime(iu,ipsi) = 1.d0
+        !
+    END DO
+    ! 
+    ! Ending execution and returning control
+    ! 
+    END FUNCTION matrix_dtheta_dpsiprime
+! 
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+! 
 !    FUNCTION matrix_dthetaF_dthetaprime ( theta )
 !    ! 
 !    ! Computes the matrix d theta_F / d theta',
@@ -418,7 +452,7 @@ CONTAINS
 !    !
 !    IF (switch_Sigma1 .EQ. 1) THEN
 !        iu = num_theta_beta+num_theta_omega+num_theta_sigma
-!        matrix_dthetaF_dthetaprime(iu,iu) = 2.d0*max_rpibpis/(pi*(1.d0+theta(iu)**2))
+!        matrix_dthetaF_dthetaprime(iu,iu) = 2.d0*max_rpibpis/(greek_pi*(1.d0+theta(iu)**2))
 !    END IF
 !    !
 !    ! delta1

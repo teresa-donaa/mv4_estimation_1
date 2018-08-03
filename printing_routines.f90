@@ -2,7 +2,7 @@ MODULE printing_routines
 !
 USE constants
 USE observations
-!USE UTILITIES_DV_DV
+USE utilities
 !
 IMPLICIT NONE
 !
@@ -66,54 +66,50 @@ CONTAINS
 !
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
-!    SUBROUTINE print_res ( i_stime, objf, theta, task, grad )
-!    !
-!    IMPLICIT NONE
-!    !
-!    ! Declaring dummy variables
-!    !
-!    INTEGER, INTENT(IN) :: i_stime      ! Estimation trial number
-!    REAL(8), INTENT(IN) :: objf         ! Latent criterion function at the optimum
-!    REAL(8), INTENT(IN) :: theta(num_theta)
-!    CHARACTER(len=60), INTENT(IN) :: task
-!    REAL(8), INTENT(IN) :: grad(num_theta)
-!    !
-!    ! Declaring local variables
-!    !
-!    REAL(8) :: xn_pib(num_X_pib)
-!    REAL(8) :: xn_pis(num_X_pis)
-!    REAL(8) :: xn_xib(num_X_xib)
-!    REAL(8) :: xn_xis(num_X_xis)
-!    REAL(8) :: xn_rho(num_X_rho)
-!    REAL(8) :: xn_kappa(num_X_kappa)
-!    REAL(8) :: xn_omegab(num_X_omegab)
-!    REAL(8) :: xn_omegas(num_X_omegas)
-!    REAL(8) :: psi(num_psi)
-!    REAL(8) :: mpib, mpis, xib, xis, rho, kappa, omegab, omegas, delta(num_theta_delta)
-!    REAL(8) :: sigmapib, sigmapis, rpibpis, sigmaz
-!    !
-!    ! Beginning execution
-!    !
-!    CALL compute_psi_parameters(xn_pib,xn_pis,xn_xib,xn_xis, &
-!        xn_rho,xn_kappa,xn_omegab,xn_omegas,theta,psi)
-!    CALL compute_b_parameters(psi,mpib,mpis,xib,xis,rho,kappa, &
-!        omegab,omegas,delta,sigmapib,sigmapis,rpibpis,sigmaz)
-!    !
-!    ! Print res file
-!    !
-!    WRITE (unit_res,35) i_stime, objf, theta, &
-!        sigmapib, sigmapis, rpibpis, sigmaz, delta, &
-!        error_flag, task, grad
-!35  FORMAT ( I3, " # ", ES25.18, " #", <num_theta>(1X, ES25.18), &
-!         " #", <4>(1X, ES15.8), " #", <num_theta_delta>(1X, ES15.8), &
-!         " # ", L5, " # ", A60, " # ", <num_theta>(ES15.8,1X))
-!    !
-!    ! Ending execution and returning control
-!    !
-!    END SUBROUTINE print_res 
-!!
-!! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!!
+    SUBROUTINE print_res ( i_stime, objf, theta, task, grad )
+    !
+    IMPLICIT NONE
+    !
+    ! Declaring dummy variables
+    !
+    INTEGER, INTENT(IN) :: i_stime      ! Estimation trial number
+    REAL(8), INTENT(IN) :: objf         ! Latent criterion function at the optimum
+    REAL(8), INTENT(IN) :: theta(num_theta)
+    CHARACTER(len=60), INTENT(IN) :: task
+    REAL(8), INTENT(IN) :: grad(num_theta)
+    !
+    ! Declaring local variables
+    !
+    REAL(8) :: psi(num_psi)
+    REAL(8) :: m_s, m_q, m_z, m_y, sigma_s, sigma_z, sigma_y, rho_sz, rho_sy, rho_zy
+    REAL(8) :: gamma, kappa, q, delta_z(num_L-1), delta_y(num_H-1)
+    !
+    ! Beginning execution
+    !
+    CALL compute_psi_parameters(x_m_s(1,:),x_m_q(1,:),x_m_y(1,:),x_sigma_s(1,:), &
+        theta,psi)
+    CALL compute_b_parameters(psi,m_s,m_q,m_z,m_y, &
+            sigma_s,sigma_z,sigma_y,rho_sz,rho_sy,rho_zy, &
+            gamma,kappa,q,delta_z,delta_y)
+    !
+    ! Print res file
+    !
+    WRITE (unit_res,35) i_stime, objf, theta, &
+        sigma_z, sigma_y, rho_sz, rho_sy, rho_zy, &
+        delta_z, delta_y, &
+        error_flag, task, grad
+35  FORMAT ( I3, " # ", ES25.18, " #", <num_theta>(1X, ES25.18), &
+        " #", <5>(1X, ES15.8), &
+        " #", <num_L-1>(1X, ES15.8), &
+        " #", <num_H-1>(1X, ES15.8), &
+        " # ", L5, " # ", A60, " # ", <num_theta>(ES15.8,1X))
+    !
+    ! Ending execution and returning control
+    !
+    END SUBROUTINE print_res 
+!
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
 !    SUBROUTINE print_final_results ( theta, stderr, objf, grad, vmat )
 !    !
 !    ! Computes final results and writes them on file
@@ -269,8 +265,8 @@ CONTAINS
 !            '                          R PIB PIS                              ', /, &
 !            '-----------------------------------------------------------------' )
 !        ind = num_theta_beta+num_theta_omega+num_theta_sigma
-!        WRITE (unit_fin_res, 1992) max_rpibpis*(2.d0/pi*DATAN(theta(ind))), stderr(ind), &
-!            max_rpibpis*(2.d0/pi*DATAN(theta(ind)))/stderr(ind), grad(ind)
+!        WRITE (unit_fin_res, 1992) max_rpibpis*(2.d0/greek_pi*DATAN(theta(ind))), stderr(ind), &
+!            max_rpibpis*(2.d0/greek_pi*DATAN(theta(ind)))/stderr(ind), grad(ind)
 !1992    FORMAT ( 1X, 'r pib pis   ', 4(1X, ES12.5) )
 !    END IF
 !    !

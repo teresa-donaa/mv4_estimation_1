@@ -110,7 +110,7 @@ INTEGER, PARAMETER :: unit_loglik = 30
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
 REAL(8), PARAMETER :: minimum_p = 1.d-10                                ! Minimum probability value
-REAL(8), PARAMETER :: pi = 3.14159265358979323846264338328d0            ! Pi
+REAL(8), PARAMETER :: greek_pi = 3.14159265358979323846264338328d0      ! Pi
 REAL(8), PARAMETER :: twooverpi = 0.636619772367581343075535053490d0    ! 2/Pi
 REAL(8), PARAMETER :: invsqrtpi = 0.564189583547756286948079451561d0    ! 1/Sqrt[Pi]
 REAL(8), PARAMETER :: sqrt2 = 1.41421356237309504880168872421d0         ! Sqrt[2]

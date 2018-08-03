@@ -37,7 +37,7 @@ CHARACTER(len = 15), ALLOCATABLE :: names_sigma_s(:)
 !
 LOGICAL :: error_flag
 !
-    CONTAINS
+CONTAINS
 !
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
