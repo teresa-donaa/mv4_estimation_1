@@ -153,8 +153,8 @@ CONTAINS
     REAL(8), INTENT(OUT) :: gamma
     REAL(8), INTENT(OUT) :: kappa
     REAL(8), INTENT(OUT) :: q
-    REAL(8), INTENT(OUT) :: delta_z(num_L-1)
-    REAL(8), INTENT(OUT) :: delta_y(num_H-1)
+    REAL(8), INTENT(OUT) :: delta_z(num_delta_z)
+    REAL(8), INTENT(OUT) :: delta_y(num_delta_y)
     !
     ! Declaring local variables
     !
@@ -187,7 +187,7 @@ CONTAINS
     IF (switch_sigma_z .EQ. 1) THEN
         !
         ipsi = ipsi+1
-        sigma_z = EXP(psi(ipsi) )
+        sigma_z = EXP(psi(ipsi))
         !
     ELSE IF (switch_sigma_z .EQ. 0) THEN
         !
@@ -200,7 +200,7 @@ CONTAINS
     IF (switch_sigma_y .EQ. 1) THEN
         !
         ipsi = ipsi+1
-        sigma_y = EXP(psi(ipsi) )
+        sigma_y = EXP(psi(ipsi))
         !
     ELSE IF (switch_sigma_y .EQ. 0) THEN
         !
@@ -239,11 +239,7 @@ CONTAINS
     IF (switch_rho_zy .EQ. 1) THEN
         !
         ipsi = ipsi+1
-        rho_zy = twooverpi*ATAN(psi(ipsi))
-        !
-    ELSE IF (switch_rho_zy .EQ. 0) THEN
-        !
-        rho_zy = 0.d0
+        rho_zy = rho_sz*rho_sy+SQRT((1.d0-rho_sz**2)*(1.d0-rho_sy**2))*twooverpi*ATAN(psi(ipsi))
         !
     END IF
     !
@@ -252,7 +248,7 @@ CONTAINS
     il = ipsi
     delta_z(1) = 0.d0
     delta_z(2:) = EXP(psi(il+1:il+num_theta_delta_z))
-    DO i = 3, num_L-1
+    DO i = 3, num_delta_z
         !
         delta_z(i) = delta_z(i)+delta_z(i-1)
         !
@@ -263,7 +259,7 @@ CONTAINS
     il = il+num_theta_delta_z
     delta_y(1) = 0.d0
     delta_y(2:) = EXP(psi(il+1:il+num_theta_delta_y))
-    DO i = 3, num_H-1
+    DO i = 3, num_delta_y
         !
         delta_y(i) = delta_y(i)+delta_y(i-1)
         !
@@ -272,6 +268,115 @@ CONTAINS
     ! Ending execution and returning control
     !
     END SUBROUTINE compute_b_parameters
+!
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+    SUBROUTINE compute_thetaF_parameters ( theta, thetaF )
+    !
+    ! Computes the theta_F parameters from the theta parameters, 
+    ! where theta_F is the "final" parameters vector on output 
+    ! and theta is the vector of parameters w.r.t. which we minimize -log(L)
+    !
+    IMPLICIT NONE
+    !
+    ! Declaring dummy variables
+    !
+    REAL(8), INTENT(IN) :: theta(num_theta)
+    REAL(8), INTENT(OUT) :: thetaF(num_theta)
+    !
+    ! Declaring local variables
+    !
+    INTEGER :: i, iu
+    REAL(8) :: rho_sz, rho_sy
+    ! 
+    ! Beginning execution
+    ! 
+    ! thetaF = theta for the parameters in the means and in sigma_s
+    !
+    DO i = 1, num_theta_beta+num_theta_sigma_s
+        !
+        thetaF(i) = theta(i)
+        !
+    END DO
+    iu = num_theta_beta+num_theta_sigma_s
+    !
+    ! sigma_z
+    !
+    IF (switch_sigma_z .EQ. 1) THEN
+        !
+        iu = iu+1
+        thetaF(iu) = EXP(theta(iu))
+        !
+    END IF
+    !
+    ! sigma_y
+    !
+    IF (switch_sigma_y .EQ. 1) THEN
+        !
+        iu = iu+1
+        thetaF(iu) = EXP(theta(iu))
+        !
+    END IF
+    !
+    ! rho_sz
+    !
+    IF (switch_rho_sz .EQ. 1) THEN
+        !
+        iu = iu+1
+        rho_sz = twooverpi*ATAN(theta(iu))
+        thetaF(iu) = rho_sz
+        !
+    ELSE IF (switch_rho_sz .EQ. 0) THEN
+        !
+        rho_sz = 0.d0
+        !
+    END IF
+    !
+    ! rho_sy
+    !
+    IF (switch_rho_sy .EQ. 1) THEN
+        !
+        iu = iu+1
+        rho_sy = twooverpi*ATAN(theta(iu))
+        thetaF(iu) = rho_sy
+        !
+    ELSE IF (switch_rho_sy .EQ. 0) THEN
+        !
+        rho_sy = 0.d0
+        !
+    END IF
+    !
+    ! rho_zy
+    !
+    IF (switch_rho_zy .EQ. 1) THEN
+        !
+        iu = iu+1
+        thetaF(iu) = rho_sz*rho_sy+SQRT((1.d0-rho_sz**2)*(1.d0-rho_sy**2))*twooverpi*ATAN(theta(iu))
+        !
+    END IF
+    !
+    ! delta_z
+    !
+    thetaF(iu+1:iu+num_theta_delta_z) = EXP(theta(iu+1:iu+num_theta_delta_z))
+    DO i = iu+2, iu+num_theta_delta_z
+        !
+        thetaF(i) = thetaF(i)+thetaF(i-1)
+        !
+    END DO
+    iu = iu+num_theta_delta_z
+    !
+    ! delta_y
+    !
+    thetaF(iu+1:iu+num_theta_delta_y) = EXP(theta(iu+1:iu+num_theta_delta_y))
+    DO i = iu+2, iu+num_theta_delta_y
+        !
+        thetaF(i) = thetaF(i)+thetaF(i-1)
+        !
+    END DO
+    !
+    ! Ending execution and returning control
+    !
+    END SUBROUTINE compute_thetaF_parameters
 ! 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ! 
@@ -396,7 +501,7 @@ CONTAINS
         !
     END DO
     !
-    ! delta_z
+    ! delta_y
     !
     DO i = 1, num_theta_delta_y
         !
@@ -413,56 +518,126 @@ CONTAINS
 ! 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ! 
-!    FUNCTION matrix_dthetaF_dthetaprime ( theta )
-!    ! 
-!    ! Computes the matrix d theta_F / d theta',
-!    ! dove theta_F è il vettore dei parametri "finali" in output (il vero delta_1)
-!    ! e theta è il vettore dei parametri rispetto ai quali si minimizza - log(L)
-!    ! 
-!    ! Declaring dummy variables
-!    ! 
-!    REAL(8), INTENT(IN) :: theta(num_theta)
-!    ! 
-!    ! Declaring function type
-!    ! 
-!    REAL(8) :: matrix_dthetaF_dthetaprime(num_theta,num_theta)
-!    !
-!    ! Declaring local variables
-!    !
-!    INTEGER :: i, iu
-!    ! 
-!    ! Beginning execution
-!    ! 
-!    ! Initialising matrix_dtheta_dbprime
-!    ! 
-!    matrix_dthetaF_dthetaprime = 0.d0
-!    !
-!    ! Diagonale uguale a 1, a parte gli ultimi tre elementi in basso a destra
-!    !
-!    DO i = 1, num_theta-3
-!        matrix_dthetaF_dthetaprime(i,i) = 1.d0
-!    END DO
-!    !
-!    ! sigmapis
-!    !
-!    iu = num_theta_beta+num_theta_omega+1
-!    matrix_dthetaF_dthetaprime(iu,iu) = EXP(theta(iu))
-!    !
-!    ! rpibpis
-!    !
-!    IF (switch_Sigma1 .EQ. 1) THEN
-!        iu = num_theta_beta+num_theta_omega+num_theta_sigma
-!        matrix_dthetaF_dthetaprime(iu,iu) = 2.d0*max_rpibpis/(greek_pi*(1.d0+theta(iu)**2))
-!    END IF
-!    !
-!    ! delta1
-!    !
-!    iu = num_theta
-!    matrix_dthetaF_dthetaprime(iu,iu) = EXP(theta(iu))
-!    ! 
-!    ! Ending execution and returning control
-!    ! 
-!    END FUNCTION matrix_dthetaF_dthetaprime
+    FUNCTION matrix_dthetaF_dthetaprime ( theta )
+    ! 
+    ! Computes the matrix d theta_F / d theta',
+    ! where theta_F is the "final" parameters vector on output 
+    ! and theta is the vector of parameters w.r.t. which we minimize -log(L)
+    !
+    IMPLICIT NONE
+    ! 
+    ! Declaring dummy variables
+    ! 
+    REAL(8), INTENT(IN) :: theta(num_theta)
+    ! 
+    ! Declaring function type
+    ! 
+    REAL(8) :: matrix_dthetaF_dthetaprime(num_theta,num_theta)
+    !
+    ! Declaring local variables
+    !
+    INTEGER :: i, iu
+    REAL(8) :: rho_sz, rho_sy, rho_zy
+    ! 
+    ! Beginning execution
+    ! 
+    ! Initialising matrix_dtheta_dbprime
+    ! 
+    matrix_dthetaF_dthetaprime = 0.d0
+    !
+    ! Unit diagonal block for the parameters in the means and in sigma_s
+    !
+    DO i = 1, num_theta_beta+num_theta_sigma_s
+        !
+        matrix_dthetaF_dthetaprime(i,i) = 1.d0
+        !
+    END DO
+    iu = num_theta_beta+num_theta_sigma_s
+    !
+    ! sigma_z
+    !
+    IF (switch_sigma_z .EQ. 1) THEN
+        !
+        iu = iu+1
+        matrix_dthetaF_dthetaprime(iu,iu) = EXP(theta(iu))
+        !
+    END IF
+    !
+    ! sigma_y
+    !
+    IF (switch_sigma_y .EQ. 1) THEN
+        !
+        iu = iu+1
+        matrix_dthetaF_dthetaprime(iu,iu) = EXP(theta(iu))
+        !
+    END IF
+    !
+    ! Correlation parameters
+    !
+    IF ((switch_rho_sz .EQ. 1) .AND. (switch_rho_sy .EQ. 1)) THEN
+        !
+        rho_sz = twooverpi*ATAN(theta(iu+1))
+        rho_sy = twooverpi*ATAN(theta(iu+2))
+        rho_zy = rho_sz*rho_sy+SQRT((1.d0-rho_sz**2)*(1.d0-rho_sy**2))*twooverpi*ATAN(theta(iu+3))
+        matrix_dthetaF_dthetaprime(iu+1,iu+1) = twooverpi/(1.d0+theta(iu+1)**2)
+        matrix_dthetaF_dthetaprime(iu+3,iu+1) = twooverpi/(1.d0+theta(iu+1)**2)* &
+            (rho_sy-rho_sz*(rho_zy-rho_sz*rho_sy)/(1.d0-rho_sz**2))
+        matrix_dthetaF_dthetaprime(iu+2,iu+2) = twooverpi/(1.d0+theta(iu+2)**2)
+        matrix_dthetaF_dthetaprime(iu+3,iu+2) = twooverpi/(1.d0+theta(iu+2)**2)* &
+            (rho_sz-rho_sy*(rho_zy-rho_sz*rho_sy)/(1.d0-rho_sy**2))
+        matrix_dthetaF_dthetaprime(iu+3,iu+3) = twooverpi/(1.d0+theta(iu+3)**2)* &
+            SQRT((1.d0-rho_sz**2)*(1.d0-rho_sy**2))
+        iu = iu+3
+        !
+    ELSE IF ((switch_rho_sz .EQ. 1) .AND. (switch_rho_sy .EQ. 0)) THEN
+        !
+        rho_sz = twooverpi*ATAN(theta(iu+1))
+        rho_zy = SQRT(1.d0-rho_sz**2)*twooverpi*ATAN(theta(iu+2))
+        matrix_dthetaF_dthetaprime(iu+1,iu+1) = twooverpi/(1.d0+theta(iu+1)**2)
+        matrix_dthetaF_dthetaprime(iu+2,iu+1) = -twooverpi/(1.d0+theta(iu+1)**2)* &
+            rho_sz*rho_zy/(1.d0-rho_sz**2)
+        matrix_dthetaF_dthetaprime(iu+2,iu+2) = twooverpi/(1.d0+theta(iu+2)**2)* &
+            SQRT(1.d0-rho_sz**2)
+        iu = iu+2
+        !
+    ELSE IF ((switch_rho_sz .EQ. 0) .AND. (switch_rho_sy .EQ. 1)) THEN
+        !
+        rho_sy = twooverpi*ATAN(theta(iu+1))
+        rho_zy = SQRT(1.d0-rho_sy**2)*twooverpi*ATAN(theta(iu+2))
+        matrix_dthetaF_dthetaprime(iu+1,iu+1) = twooverpi/(1.d0+theta(iu+1)**2)
+        matrix_dthetaF_dthetaprime(iu+2,iu+1) = -twooverpi/(1.d0+theta(iu+1)**2)* &
+            rho_sy*rho_zy/(1.d0-rho_sy**2)
+        matrix_dthetaF_dthetaprime(iu+2,iu+2) = twooverpi/(1.d0+theta(iu+2)**2)* &
+            SQRT(1.d0-rho_sy**2)
+        iu = iu+2
+        !
+    ELSE IF ((switch_rho_sz .EQ. 0) .AND. (switch_rho_sy .EQ. 0)) THEN
+        !
+        rho_zy = twooverpi*ATAN(theta(iu+1))
+        matrix_dthetaF_dthetaprime(iu+1,iu+1) = twooverpi/(1.d0+theta(iu+1)**2)
+        !
+    END IF
+    !
+    ! delta_z
+    !
+    DO i = iu+1, iu+num_theta_delta_z
+        !
+        matrix_dthetaF_dthetaprime(i:iu+num_theta_delta_z,i) = EXP(theta(i))
+        !
+    END DO
+    iu = iu+num_theta_delta_z
+    !
+    ! delta_y
+    !
+    DO i = iu+1, iu+num_theta_delta_y
+        !
+        matrix_dthetaF_dthetaprime(i:iu+num_theta_delta_y,i) = EXP(theta(i))
+        !
+    END DO
+    ! 
+    ! Ending execution and returning control
+    ! 
+    END FUNCTION matrix_dthetaF_dthetaprime
 !
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !

@@ -62,6 +62,11 @@ CONTAINS
     num_theta_sigma_s = num_X_sigma_s
     num_theta = num_theta_beta+num_theta_sigma_s+num_theta_sigma_z_y+num_theta_rho+num_theta_delta_z+num_theta_delta_y
     !
+    ! Parameters for POLITOPE
+    ! 
+    max_iters_politope = (100*num_theta)*to1+(600*num_theta)*to2
+    max_repeat_politope = num_theta*to1+8*num_theta*to2
+    !
     ! Ending execution and returning control
     !
 	END SUBROUTINE input_model

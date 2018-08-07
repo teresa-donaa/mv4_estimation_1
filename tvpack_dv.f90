@@ -32,10 +32,7 @@ SUBROUTINE TVTL_DV(nu, h, hd, r, rd, epsi, tvtl, tvtld, nbdirs)
 !   EPSI  REAL required absolute accuracy; maximum accuracy for most
 !          computations is approximately 1D-14
 ! 
-!@SP
-!@SP      EXTERNAL TVTMFN
   REAL*8, EXTERNAL :: TVTMFN
-!@SP
   INTEGER :: nu, nuc
   DOUBLE PRECISION :: h(3), h1, h2, h3, r(3), r12, r13, r23, epsi
   DOUBLE PRECISION :: hd(nbdirsmax, 3), h1d(nbdirsmax), h2d(nbdirsmax), &

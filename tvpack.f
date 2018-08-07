@@ -23,10 +23,7 @@
 *   EPSI  REAL required absolute accuracy; maximum accuracy for most
 *          computations is approximately 1D-14
 * 
-!@SP
-!@SP      EXTERNAL TVTMFN
       REAL(8), EXTERNAL :: TVTMFN
-!@SP
       INTEGER NU, NUC
       DOUBLE PRECISION H(3), H1, H2, H3, R(3), R12, R13, R23, EPSI
       DOUBLE PRECISION ONE, ZRO, EPS, ZROS(3), HS(3), TVT

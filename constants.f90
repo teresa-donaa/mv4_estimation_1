@@ -11,11 +11,15 @@ INTEGER, PARAMETER :: to1 = 1           ! Prime stime
 INTEGER, PARAMETER :: to2 = 0           ! Seconde stime
 INTEGER, PARAMETER :: to3 = 0           ! Varianza
 !
-!@SP INTEGER, PARAMETER :: num_stime = to0*1+to1*100+to2*1+to3*0
 INTEGER, PARAMETER :: num_stime = to0*1+to1*100+to2*1+to3*0
                                         ! Total number of completed estimation trials
 INTEGER, PARAMETER :: compute_var_as = to0*0+to1*0+to2*0+to3*1      
                                         ! Switch to compute the asymptotic variance matrix
+!
+! Selection of optimization algorithm
+!
+INTEGER, PARAMETER :: switch_lbfgs = 1          ! = 1: L-BFGS optimization ON; = 0 L-BFGS optimization OFF
+INTEGER, PARAMETER :: switch_politope = 1       ! = 1: POLITOPE optimization ON; = 0 POLITOPE optimization OFF
 ! 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ! Declaring sample characteristics and selecting explanatory variables
@@ -45,13 +49,15 @@ INTEGER, PARAMETER :: num_theta_sigma_z_y = switch_sigma_z+switch_sigma_y
 !
 ! correlation parameters
 !
-INTEGER, PARAMETER :: switch_rho_sz = 0         ! = 1: rho_sz unconstrained; = 0: rho_sz = 0
-INTEGER, PARAMETER :: switch_rho_sy = 0         ! = 1: rho_sy unconstrained; = 0: rho_sy = 0
-INTEGER, PARAMETER :: switch_rho_zy = 0         ! = 1: rho_zy unconstrained; = 0: rho_zy = 0
+INTEGER, PARAMETER :: switch_rho_sz = 1         ! = 1: rho_sz unconstrained; = 0: rho_sz = 0
+INTEGER, PARAMETER :: switch_rho_sy = 1         ! = 1: rho_sy unconstrained; = 0: rho_sy = 0
+INTEGER, PARAMETER :: switch_rho_zy = 1         ! RHO_ZY CAN'T BE SET TO ZERO!
 INTEGER, PARAMETER :: num_theta_rho = switch_rho_sz+switch_rho_sy+switch_rho_zy
 !
 ! threshold parameters
 !
+INTEGER, PARAMETER :: num_delta_z = num_L-1
+INTEGER, PARAMETER :: num_delta_y = num_H-1
 INTEGER, PARAMETER :: num_theta_delta_z = num_L-2
 INTEGER, PARAMETER :: num_theta_delta_y = num_H-2
 !
@@ -70,6 +76,25 @@ REAL(8), PARAMETER :: factr = (to0+to1)*1.d+7+(to2+to3)*1.d+1
 REAL(8), PARAMETER :: pgtol = (to0+to1)*1.0d-4+(to2+to3)*1.d-5
 !
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+! Declaring parameters for POLITOPE
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+! 
+REAL(8), PARAMETER :: tol = 1.d-7*to1+1.d-11*to2
+                                                ! Tolerance in second round optimization
+REAL(8), PARAMETER :: tol_conv = 1.d-6*to1+1.d-10*to2
+                                                ! Convergence tolerance in second round optimization
+REAL(8), PARAMETER :: tol_politope_p = tol
+REAL(8), PARAMETER :: crit_politope_conv_p = tol_conv
+REAL(8), PARAMETER :: tol_politope_y = tol
+REAL(8), PARAMETER :: crit_politope_conv_y = tol_conv
+INTEGER, PARAMETER :: rtol_formula = 2          ! Chooses the formula used to compute rtol
+                                                ! See lines 150-190 in simplex_M.f90
+INTEGER, PARAMETER :: crit_conv_formula = 1     ! Politope minimizations are restarted looking 
+                                                ! at improvements in: 
+                                                ! 1 = y
+                                                ! 2 = p
+!
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ! Declaring parameters about the output files
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ! 
@@ -81,28 +106,30 @@ CHARACTER(len=30), PARAMETER :: file_theta = 'theta.txt'
 CHARACTER(len=20), PARAMETER :: file_res = 'res.txt'
 CHARACTER(len=20), PARAMETER :: file_res_to1 = 'res_to1.txt'
 CHARACTER(len=20), PARAMETER :: file_res_to2 = 'res_to2.txt'
-!CHARACTER(len=20), PARAMETER :: file_fin_res = 'fin_res.txt'
-!CHARACTER(len=20), PARAMETER :: file_vartheta = 'vartheta.txt'
-!CHARACTER(len=20), PARAMETER :: file_imat = 'imat.txt'
-!CHARACTER(len=20), PARAMETER :: file_jmat = 'jmat.txt'
-!CHARACTER(len=20), PARAMETER :: file_invjmat = 'invjmat.txt'
-!CHARACTER(len=20), PARAMETER :: file_dl = 'dl.txt'
+CHARACTER(len=20), PARAMETER :: file_fin_res = 'fin_res.txt'
+CHARACTER(len=20), PARAMETER :: file_varthetaQML = 'varthetaQML.txt'
+CHARACTER(len=20), PARAMETER :: file_imat = 'imat.txt'
+CHARACTER(len=20), PARAMETER :: file_jmat = 'jmat.txt'
+CHARACTER(len=20), PARAMETER :: file_invjmat = 'invjmat.txt'
+CHARACTER(len=20), PARAMETER :: file_dl = 'dl.txt'
 CHARACTER(len=20), PARAMETER :: file_loglik = 'loglik.txt'
+CHARACTER(len=30), PARAMETER :: file_politope = 'politope.txt'
 !
 INTEGER, PARAMETER :: unit_data = 1             
 INTEGER, PARAMETER :: unit_names = 2            
 INTEGER, PARAMETER :: unit_model = 3
 INTEGER, PARAMETER :: unit_theta = 4
+INTEGER, PARAMETER :: unit_politope = 5
 !
 INTEGER, PARAMETER :: unit_res = 21             
 INTEGER, PARAMETER :: unit_res_to1 = 22         
 INTEGER, PARAMETER :: unit_res_to2 = 23         
-!INTEGER, PARAMETER :: unit_fin_res = 24         
-!INTEGER, PARAMETER :: unit_vartheta = 25        
-!INTEGER, PARAMETER :: unit_imat = 26            
-!INTEGER, PARAMETER :: unit_jmat = 27            
-!INTEGER, PARAMETER :: unit_invjmat = 28     
-!INTEGER, PARAMETER :: unit_dl = 29      
+INTEGER, PARAMETER :: unit_fin_res = 24         
+INTEGER, PARAMETER :: unit_varthetaQML = 25
+INTEGER, PARAMETER :: unit_imat = 26            
+INTEGER, PARAMETER :: unit_jmat = 27            
+INTEGER, PARAMETER :: unit_invjmat = 28     
+INTEGER, PARAMETER :: unit_dl = 29      
 INTEGER, PARAMETER :: unit_loglik = 30
 ! 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

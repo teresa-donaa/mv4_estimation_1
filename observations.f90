@@ -14,7 +14,8 @@ INTEGER :: num_X_m_s, num_X_m_q, num_X_m_y, num_X_sigma_s
 ! Parameters
 !
 INTEGER :: num_theta_beta, num_theta_sigma_s, num_theta
-REAL(8), ALLOCATABLE :: theta_inf(:), theta_sup(:), theta(:), grad(:)
+REAL(8), ALLOCATABLE :: theta_inf(:), theta_sup(:), theta(:), grad(:), thetaF(:), &
+     varQMLmat(:,:), stderrQML(:)
 !
 ! Data
 !
@@ -36,6 +37,8 @@ CHARACTER(len = 15), ALLOCATABLE :: names_sigma_s(:)
 ! Other
 !
 LOGICAL :: error_flag
+INTEGER :: max_iters_politope, max_repeat_politope
+REAL(8), ALLOCATABLE ::  pert_theta(:)
 !
 CONTAINS
 !
@@ -49,9 +52,12 @@ CONTAINS
     !
     ! Beginning execution
     !
-    ALLOCATE(theta_inf(num_theta),theta_sup(num_theta),theta(num_theta),grad(num_theta), &
+    ALLOCATE(theta_inf(num_theta),theta_sup(num_theta),theta(num_theta),grad(num_theta),thetaF(num_theta), &
+        varQMLmat(num_theta,num_theta),stderrQML(num_theta), &
         x_m_s(num_N,num_X_m_s),x_m_q(num_N,num_X_m_q),x_m_y(num_N,num_X_m_y),x_sigma_s(num_N,num_X_sigma_s), &
-        names_m_s(num_X_m_s),names_m_q(num_X_m_q),names_m_y(num_X_m_y),names_sigma_s(num_X_sigma_s))
+        names_m_s(num_X_m_s),names_m_q(num_X_m_q),names_m_y(num_X_m_y),names_sigma_s(num_X_sigma_s), &
+        pert_theta(num_theta))
+    pert_theta = 0.5d0     
     !
     ! Ending execution and returning control
     !
@@ -67,9 +73,10 @@ CONTAINS
     !
     ! Beginning execution
     !
-    DEALLOCATE(theta_inf,theta_sup,theta,grad, &
+    DEALLOCATE(theta_inf,theta_sup,theta,grad,thetaF,varQMLmat,stderrQML, &
         x_m_s,x_m_q,x_m_y,x_sigma_s, &
-        names_m_s,names_m_q,names_m_y,names_sigma_s)
+        names_m_s,names_m_q,names_m_y,names_sigma_s, &
+        pert_theta)
     !
     ! Ending execution and returning control
     !

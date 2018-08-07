@@ -82,7 +82,7 @@ CONTAINS
     !
     REAL(8) :: psi(num_psi)
     REAL(8) :: m_s, m_q, m_z, m_y, sigma_s, sigma_z, sigma_y, rho_sz, rho_sy, rho_zy
-    REAL(8) :: gamma, kappa, q, delta_z(num_L-1), delta_y(num_H-1)
+    REAL(8) :: gamma, kappa, q, delta_z(num_delta_z), delta_y(num_delta_y)
     !
     ! Beginning execution
     !
@@ -100,8 +100,8 @@ CONTAINS
         error_flag, task, grad
 35  FORMAT ( I3, " # ", ES25.18, " #", <num_theta>(1X, ES25.18), &
         " #", <5>(1X, ES15.8), &
-        " #", <num_L-1>(1X, ES15.8), &
-        " #", <num_H-1>(1X, ES15.8), &
+        " #", <num_delta_z>(1X, ES15.8), &
+        " #", <num_delta_y>(1X, ES15.8), &
         " # ", L5, " # ", A60, " # ", <num_theta>(ES15.8,1X))
     !
     ! Ending execution and returning control
@@ -110,200 +110,251 @@ CONTAINS
 !
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
-!    SUBROUTINE print_final_results ( theta, stderr, objf, grad, vmat )
-!    !
-!    ! Computes final results and writes them on file
-!    !
-!    IMPLICIT NONE
-!    !
-!    ! Declaring dummy variables
-!    !
-!    REAL(8), INTENT(IN) :: theta(num_theta)             ! Estimates of parameters
-!    REAL(8), INTENT(IN) :: stderr(num_theta)            ! Estimated asymptotic standard errors
-!    REAL(8), INTENT(IN) :: objf                         ! Optimized latent criterion 
-!    REAL(8), INTENT(IN) :: grad(num_theta)              ! Gradient at theta_star
-!    REAL(8), INTENT(IN) :: vmat(num_theta,num_theta)    ! Estimated variance matrix of the parameters
-!    !
-!    ! Declaring local variables
-!    !
-!    INTEGER :: i_par, i_L, ind                          ! Loop indexes
-!    !
-!    ! Beginning execution
-!    !
-!    ! Computing statistics for the parameter estimates
-!    !
-!    ! m_pib
-!    !
-!    WRITE (unit_fin_res,3525) 
-!    3525 FORMAT ( /, &
-!        '-----------------------------------------------------------------', /, &
-!        '    Parameter     Estimate       AsySE1  AsyT-Ratio1     Gradient', /, &
-!        '-----------------------------------------------------------------', /, &
-!        '                           M_PI B                                ', /, &
-!        '-----------------------------------------------------------------' )
-!    !
-!    DO i_par = 1, num_X_pib
-!        WRITE (unit_fin_res, 9999) names_pib(i_par), theta(i_par), stderr(i_par), &
-!            theta(i_par)/stderr(i_par), grad(i_par)
-!        9999 FORMAT ( 1X, A12, 4(1X, ES12.5) )
-!    END DO
-!    !
-!    ! m_pis
-!    !
-!    WRITE (unit_fin_res,35251) 
-!    35251 FORMAT ( &
-!        '-----------------------------------------------------------------', /, &
-!        '                           M_PI S                                ', /, &
-!        '-----------------------------------------------------------------' )
-!    !
-!    ind = num_X_pib
-!    DO i_par = ind+1, ind+num_X_pis
-!        WRITE (unit_fin_res, 9999) names_pis(i_par-ind), theta(i_par), stderr(i_par), &
-!            theta(i_par)/stderr(i_par), grad(i_par)
-!    END DO
-!    !
-!    ! xib
-!    !
-!    WRITE (unit_fin_res,3526) 
-!    3526 FORMAT ( &
-!        '-----------------------------------------------------------------', /, &
-!        '                            XI B                                 ', /, &
-!        '-----------------------------------------------------------------' )
-!    !
-!    ind = num_X_pib+num_X_pis
-!    DO i_par = ind+1, ind+num_X_xib
-!        WRITE (unit_fin_res, 9999) names_xib(i_par-ind), theta(i_par), stderr(i_par), &
-!            theta(i_par)/stderr(i_par), grad(i_par)
-!    END DO
-!    !
-!    ! xis
-!    !
-!    WRITE (unit_fin_res,35261) 
-!    35261 FORMAT ( &
-!        '-----------------------------------------------------------------', /, &
-!        '                            XI S                                 ', /, &
-!        '-----------------------------------------------------------------' )
-!    !
-!    ind = num_X_pib+num_X_pis+num_X_xib
-!    DO i_par = ind+1, ind+num_X_xis
-!        WRITE (unit_fin_res, 9999) names_xis(i_par-ind), theta(i_par), stderr(i_par), &
-!            theta(i_par)/stderr(i_par), grad(i_par)
-!    END DO
-!    !
-!    ! rho
-!    !
-!    WRITE (unit_fin_res,35262) 
-!    35262 FORMAT ( &
-!        '-----------------------------------------------------------------', /, &
-!        '                             RHO                                 ', /, &
-!        '-----------------------------------------------------------------' )
-!    !
-!    ind = num_X_pib+num_X_pis+num_X_xib+num_X_xis
-!    DO i_par = ind+1, ind+num_X_rho
-!        WRITE (unit_fin_res, 9999) names_rho(i_par-ind), theta(i_par), stderr(i_par), &
-!            theta(i_par)/stderr(i_par), grad(i_par)
-!    END DO
-!    !
-!    ! kappa
-!    !
-!    WRITE (unit_fin_res,35263) 
-!    35263 FORMAT ( &
-!        '-----------------------------------------------------------------', /, &
-!        '                              KAPPA                              ', /, &
-!        '-----------------------------------------------------------------' )
-!    !
-!    ind = num_X_pib+num_X_pis+num_X_xib+num_X_xis+num_X_rho
-!    DO i_par = ind+1, ind+num_X_kappa
-!        WRITE (unit_fin_res, 9999) names_kappa(i_par-ind), theta(i_par), &
-!            stderr(i_par), theta(i_par)/stderr(i_par), grad(i_par)
-!    END DO
-!    !
-!    ! omegab
-!    !
-!    WRITE (unit_fin_res,89911) 
-!    89911 FORMAT ( &
-!        '-----------------------------------------------------------------', /, &
-!        '                            OMEGA B                              ', /, &
-!        '-----------------------------------------------------------------' )
-!    ind = num_theta_beta 
-!    DO i_par = ind+1, ind+num_X_omegab
-!        WRITE (unit_fin_res, 9999) names_omegab(i_par-ind), theta(i_par), stderr(i_par), &
-!            theta(i_par)/stderr(i_par), grad(i_par)
-!    END DO
-!    !
-!    ! omegas
-!    !
-!    WRITE (unit_fin_res,89912) 
-!    89912 FORMAT ( &
-!        '-----------------------------------------------------------------', /, &
-!        '                            OMEGA S                              ', /, &
-!        '-----------------------------------------------------------------' )
-!    ind = num_theta_beta+num_X_omegab
-!    DO i_par = ind+1, ind+num_X_omegas
-!        WRITE (unit_fin_res, 9999) names_omegas(i_par-ind), theta(i_par), stderr(i_par), &
-!            theta(i_par)/stderr(i_par), grad(i_par)
-!    END DO
-!    !
-!    ! sigma_pis
-!    !
-!    WRITE (unit_fin_res,89913) 
-!    89913 FORMAT ( &
-!        '-----------------------------------------------------------------', /, &
-!        '                          SIGMA PIS                              ', /, &
-!        '-----------------------------------------------------------------' )
-!    ind = num_theta_beta+num_theta_omega+1
-!    WRITE (unit_fin_res, 1991) EXP(theta(ind)), stderr(ind), &
-!        EXP(theta(ind))/stderr(ind), grad(ind)
-!1991 FORMAT ( 1X, 'sigma pis   ', 4(1X, ES12.5) )
-!    !
-!    ! sigma_pis
-!    !
-!    IF (switch_Sigma1 .EQ. 1) THEN
-!        WRITE (unit_fin_res,89914) 
-!        89914 FORMAT ( &
-!            '-----------------------------------------------------------------', /, &
-!            '                          R PIB PIS                              ', /, &
-!            '-----------------------------------------------------------------' )
-!        ind = num_theta_beta+num_theta_omega+num_theta_sigma
-!        WRITE (unit_fin_res, 1992) max_rpibpis*(2.d0/greek_pi*DATAN(theta(ind))), stderr(ind), &
-!            max_rpibpis*(2.d0/greek_pi*DATAN(theta(ind)))/stderr(ind), grad(ind)
-!1992    FORMAT ( 1X, 'r pib pis   ', 4(1X, ES12.5) )
-!    END IF
-!    !
-!    ! delta1
-!    !
-!    WRITE (unit_fin_res,8887) 
-!    8887 FORMAT ( &
-!        '-----------------------------------------------------------------', /, &
-!        '                              DELTA                              ', /, &
-!        '-----------------------------------------------------------------' )
-!    ind = num_theta_beta+num_theta_omega+num_theta_sigma 
-!    WRITE (unit_fin_res, 93991) num_theta_delta, EXP(theta(ind+1)), stderr(ind+1), &
-!        EXP(theta(ind+1))/stderr(ind+1), grad(ind+1)
-!    93991 FORMAT ( 1X, '    delta(', I1, ')', 4(1X, ES12.5) )
-!    !
-!    WRITE (unit_fin_res,3524) 
-!    !
-!    WRITE (unit_fin_res, 9997) -num_N*objf
-!    9997 FORMAT ( 1X, '  Total objf', 1X, ES12.5 )
-!    !
-!    WRITE (unit_fin_res, 9992) -objf
-!    9992 FORMAT ( 1X, '   Avg. objf', 1X, ES12.5 )
-!    !
-!    WRITE (unit_fin_res,3524) 
-!    3524 FORMAT ( &
-!        '---------------------------------------------------------------------------------------------------------------------' )
-!    !
-!    WRITE (unit_fin_res,14121) (vmat(ind,:), ind = 1, num_theta)
-!    14121 FORMAT (1X, &
-!        1X, 'Estimated asymptotic variance matrix of theta:', /, &
-!        <num_theta>(1X,ES12.5))
-!    !
-!    WRITE (unit_fin_res,3524) 
-!    !
-!    ! Ending execution and returning control
-!    !
-!    END SUBROUTINE print_final_results
+    SUBROUTINE print_screen_politope ( i_stime, iter, objf )
+    !
+    IMPLICIT NONE
+    !
+    ! Declaring dummy variables
+    !
+    INTEGER, INTENT(IN) :: i_stime      ! Estimation trial number
+    INTEGER, INTENT(IN) :: iter         ! Iteration number
+    REAL(8), INTENT(IN) :: objf         ! Latent criterion function at the optimum
+    !
+    ! Beginning execution
+    !
+    WRITE(*,19) i_stime, iter, objf
+19  FORMAT('Stima ', I3, ', Iter: ', I5, ' ; -LL/N: ', ES15.8)
+    !
+    ! Ending execution and returning control
+    !
+    END SUBROUTINE print_screen_politope 
+!
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+    SUBROUTINE print_final_results ( theta, stderr, objf, grad, vmat )
+    !
+    ! Computes final results and writes them on file
+    !
+    IMPLICIT NONE
+    !
+    ! Declaring dummy variables
+    !
+    REAL(8), INTENT(IN) :: theta(num_theta)             ! Estimates of parameters
+    REAL(8), INTENT(IN) :: stderr(num_theta)            ! Estimated asymptotic standard errors
+    REAL(8), INTENT(IN) :: objf                         ! Optimized latent criterion 
+    REAL(8), INTENT(IN) :: grad(num_theta)              ! Gradient at theta_star
+    REAL(8), INTENT(IN) :: vmat(num_theta,num_theta)    ! Estimated variance matrix of the parameters
+    !
+    ! Declaring local variables
+    !
+    INTEGER :: i_par, i_L, ind                          ! Loop indexes
+    CHARACTER(len = 15) :: extra_name
+    REAL(8) :: econst, stderr_econst
+    !
+    ! Beginning execution
+    !
+    ! Computing statistics for the parameter estimates
+    !
+    ! m_s
+    !
+    WRITE (unit_fin_res,3525) 
+    3525 FORMAT ( /, &
+        '-----------------------------------------------------------------', /, &
+        '    Parameter     Estimate        AsySE   AsyT-Ratio     Gradient', /, &
+        '-----------------------------------------------------------------', /, &
+        '                             M_S                                 ', /, &
+        '-----------------------------------------------------------------' )
+    
+    DO i_par = 1, num_X_m_s
+        WRITE (unit_fin_res, 9999) names_m_s(i_par), theta(i_par), stderr(i_par), &
+            theta(i_par)/stderr(i_par), grad(i_par)
+        9999 FORMAT ( 1X, A12, 4(1X, ES12.5) )
+    END DO
+    !
+    ! m_q
+    !
+    WRITE (unit_fin_res,35251) 
+    35251 FORMAT ( &
+        '-----------------------------------------------------------------', /, &
+        '                             M_Q                                 ', /, &
+        '-----------------------------------------------------------------' )
+    !
+    ind = num_X_m_s
+    DO i_par = ind+1, ind+num_X_m_q
+        WRITE (unit_fin_res, 9999) names_m_q(i_par-ind), theta(i_par), stderr(i_par), &
+            theta(i_par)/stderr(i_par), grad(i_par)
+    END DO
+    !
+    ! m_y
+    !
+    WRITE (unit_fin_res,3526) 
+    3526 FORMAT ( &
+        '-----------------------------------------------------------------', /, &
+        '                             M_Y                                 ', /, &
+        '-----------------------------------------------------------------' )
+    !
+    ind = num_X_m_s+num_X_m_q
+    DO i_par = ind+1, ind+num_X_m_y
+        WRITE (unit_fin_res, 9999) names_m_y(i_par-ind), theta(i_par), stderr(i_par), &
+            theta(i_par)/stderr(i_par), grad(i_par)
+    END DO
+    !
+    ! sigma_s
+    ! 
+    WRITE (unit_fin_res,35261) 
+    35261 FORMAT ( &
+        '-----------------------------------------------------------------', /, &
+        '                          SIGMA_S                                ', /, &
+        '-----------------------------------------------------------------' )
+    !
+    ind = num_X_m_s+num_X_m_q+num_X_m_y
+    DO i_par = ind+1, ind+num_X_sigma_s
+        WRITE (unit_fin_res, 9999) names_sigma_s(i_par-ind), theta(i_par), stderr(i_par), &
+            theta(i_par)/stderr(i_par), grad(i_par)
+    END DO
+    !
+    ! Add exp(const), in case no covariate is used in sigma_s
+    !
+    i_par = num_X_m_s+num_X_m_q+num_X_m_y+1
+    extra_name = 'e^const'
+    econst = EXP(theta(i_par))
+    stderr_econst = econst*stderr(i_par)
+    WRITE(unit_fin_res,13131)
+    13131 FORMAT('-----------------------------------------------------------------')
+    WRITE (unit_fin_res, 9999) extra_name, econst, stderr_econst, &
+        econst/stderr_econst, grad(i_par)
+    ind = num_X_m_s+num_X_m_q+num_X_m_y+num_X_sigma_s
+    !
+    ! sigma_z
+    !
+    IF (switch_sigma_z .EQ. 1) THEN
+        !
+        WRITE (unit_fin_res,35262) 
+        35262 FORMAT ( &
+            '-----------------------------------------------------------------', /, &
+            '                           SIGMA_Z                               ', /, &
+            '-----------------------------------------------------------------' )
+        !
+        ind = ind+1
+        WRITE (unit_fin_res, 9999) 'const', theta(ind), stderr(ind), &
+            theta(ind)/stderr(ind), grad(ind)
+        !
+    END IF
+    !
+    ! sigma_y
+    !
+    IF (switch_sigma_y .EQ. 1) THEN
+        !
+        WRITE (unit_fin_res,35263) 
+        35263 FORMAT ( &
+            '-----------------------------------------------------------------', /, &
+            '                           SIGMA_Y                               ', /, &
+            '-----------------------------------------------------------------' )
+        !
+        ind = ind+1
+        WRITE (unit_fin_res, 9999) 'const', theta(ind), stderr(ind), &
+            theta(ind)/stderr(ind), grad(ind)
+        !
+    END IF
+    !
+    ! rho_sz
+    !
+    IF (switch_rho_sz .EQ. 1) THEN
+        !
+        WRITE (unit_fin_res,35264) 
+        35264 FORMAT ( &
+            '-----------------------------------------------------------------', /, &
+            '                            RHO_SZ                               ', /, &
+            '-----------------------------------------------------------------' )
+        !
+        ind = ind+1
+        WRITE (unit_fin_res, 9999) 'const', theta(ind), stderr(ind), &
+            theta(ind)/stderr(ind), grad(ind)
+        !
+    END IF
+    !
+    ! rho_sy
+    !
+    IF (switch_rho_sy .EQ. 1) THEN
+        !
+        WRITE (unit_fin_res,35265) 
+        35265 FORMAT ( &
+            '-----------------------------------------------------------------', /, &
+            '                            RHO_SY                               ', /, &
+            '-----------------------------------------------------------------' )
+        !
+        ind = ind+1
+        WRITE (unit_fin_res, 9999) 'const', theta(ind), stderr(ind), &
+            theta(ind)/stderr(ind), grad(ind)
+        !
+    END IF
+    !
+    ! rho_zy
+    !
+    IF (switch_rho_zy .EQ. 1) THEN
+        !
+        WRITE (unit_fin_res,35266) 
+        35266 FORMAT ( &
+            '-----------------------------------------------------------------', /, &
+            '                            RHO_ZY                               ', /, &
+            '-----------------------------------------------------------------' )
+        !
+        ind = ind+1
+        WRITE (unit_fin_res, 9999) 'const', theta(ind), stderr(ind), &
+            theta(ind)/stderr(ind), grad(ind)
+        !
+    END IF
+    !
+    ! delta_z
+    ! 
+    WRITE (unit_fin_res,35267) 
+    35267 FORMAT ( &
+        '-----------------------------------------------------------------', /, &
+        '                          DELTA_Z                                ', /, &
+        '-----------------------------------------------------------------' )
+    !
+    DO i_par = ind+1, ind+num_theta_delta_z
+        WRITE (unit_fin_res, 9991) 'delta_z(', i_par-ind+1, ')  ', theta(i_par), stderr(i_par), &
+            theta(i_par)/stderr(i_par), grad(i_par)
+        9991 FORMAT ( 1X, A8, I1, A3, 4(1X, ES12.5) )
+    END DO
+    ind = ind+num_theta_delta_z
+    !
+    ! delta_y
+    ! 
+    WRITE (unit_fin_res,35268) 
+    35268 FORMAT ( &
+        '-----------------------------------------------------------------', /, &
+        '                          DELTA_Y                                ', /, &
+        '-----------------------------------------------------------------' )
+    !
+    DO i_par = ind+1, ind+num_theta_delta_y
+        WRITE (unit_fin_res, 9991) 'delta_y(', i_par-ind+1, ')  ', theta(i_par), stderr(i_par), &
+            theta(i_par)/stderr(i_par), grad(i_par)
+    END DO
+    !
+    WRITE (unit_fin_res,3524) 
+    !
+    WRITE (unit_fin_res, 9997) -num_N*objf
+    9997 FORMAT ( 1X, 'Total objf  ', 1X, ES12.5 )
+    !
+    WRITE (unit_fin_res, 9992) -objf
+    9992 FORMAT ( 1X, 'Avg. objf   ', 1X, ES12.5 )
+    !
+    WRITE (unit_fin_res,3524) 
+    3524 FORMAT ( &
+        '---------------------------------------------------------------------------------------------------------------------' )
+    !
+    WRITE (unit_fin_res,14121) (vmat(ind,:), ind = 1, num_theta)
+    14121 FORMAT (1X, &
+        1X, 'Estimated asymptotic variance matrix of theta:', /, &
+        <num_theta>(1X,ES12.5))
+    !
+    WRITE (unit_fin_res,3524) 
+    !
+    ! Ending execution and returning control
+    !
+    END SUBROUTINE print_final_results
 !
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !

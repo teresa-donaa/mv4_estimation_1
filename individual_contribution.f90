@@ -28,7 +28,7 @@ REAL(8) :: m_s, m_q, m_z, m_y
 REAL(8) :: sigma_s, sigma_z, sigma_y
 REAL(8) :: rho_sz, rho_sy, rho_zy
 REAL(8) :: gamma, kappa, q
-REAL(8) :: delta_z(num_L-1), delta_y(num_H-1)
+REAL(8) :: delta_z(num_delta_z), delta_y(num_delta_y)
 REAL(8) :: m_zs, m_ys, psi_z, psi_y, rho_psi_zy
 REAL(8) :: p_as, p_zy, eps
 REAL(8) :: limit3(3,4), corr3(3), pcomp(4,2)
@@ -55,8 +55,8 @@ SELECT CASE (dn)
         !
         ! probability of self-reported risk aversion and planning horizon
         !
-        m_zs = m_z-rho_sz*sigma_z/sigma_s*(m_s-q*asn)
-        m_ys = m_y-rho_sy*sigma_y/sigma_s*(m_s-q*asn)
+        m_zs = m_z+rho_sz*sigma_z/sigma_s*(m_s-q*asn)
+        m_ys = m_y+rho_sy*sigma_y/sigma_s*(m_s-q*asn)
         psi_z = sigma_z*SQRT(1.d0-rho_sz**2)
         psi_y = sigma_y*SQRT(1.d0-rho_sy**2)
         rho_psi_zy = (rho_zy-rho_sz*rho_sy)/(SQRT(1.d0-rho_sz**2)*SQRT(1.d0-rho_sy**2))
@@ -65,7 +65,6 @@ SELECT CASE (dn)
             !
             limit3(2,1) = (delta_z(1)-m_zs)/psi_z
             limit3(3,1) = (delta_y(1)-m_ys)/psi_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy)
             pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_psi_zy)
             !
         ELSE IF ((riskavn .EQ. 1) .AND. (horizonn .EQ. 2)) THEN
@@ -74,8 +73,6 @@ SELECT CASE (dn)
             limit3(3,1) = (delta_y(2)-m_ys)/psi_y
             limit3(2,3) = (delta_z(1)-m_zs)/psi_z
             limit3(3,3) = (delta_y(1)-m_ys)/psi_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy)
             pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
             pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_psi_zy)
             !
@@ -85,8 +82,6 @@ SELECT CASE (dn)
             limit3(3,1) = (delta_y(3)-m_ys)/psi_y
             limit3(2,3) = (delta_z(1)-m_zs)/psi_z
             limit3(3,3) = (delta_y(2)-m_ys)/psi_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy)
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy)
             pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_psi_zy)
             pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_psi_zy)
             !
@@ -95,9 +90,7 @@ SELECT CASE (dn)
             limit3(2,1) = (delta_z(1)-m_zs)/psi_z
             limit3(2,3) = (delta_z(1)-m_zs)/psi_z
             limit3(3,3) = (delta_y(3)-m_ys)/psi_y
-!@SP            pcomp(1,1) = cdf_N01(limit3(2,1),.FALSE.) 
             pcomp(1,1) = PHID(limit3(2,1)) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy)
             pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_psi_zy)
             !
         ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 1)) THEN
@@ -106,8 +99,6 @@ SELECT CASE (dn)
             limit3(3,1) = (delta_y(1)-m_ys)/psi_y
             limit3(2,2) = (delta_z(1)-m_zs)/psi_z
             limit3(3,2) = (delta_y(1)-m_ys)/psi_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy)
             pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
             pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_psi_zy)
             !
@@ -121,10 +112,6 @@ SELECT CASE (dn)
             limit3(3,3) = (delta_y(1)-m_ys)/psi_y
             limit3(2,4) = (delta_z(1)-m_zs)/psi_z
             limit3(3,4) = (delta_y(1)-m_ys)/psi_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy) 
             pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
             pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
             pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
@@ -140,10 +127,6 @@ SELECT CASE (dn)
             limit3(3,3) = (delta_y(2)-m_ys)/psi_y
             limit3(2,4) = (delta_z(1)-m_zs)/psi_z
             limit3(3,4) = (delta_y(2)-m_ys)/psi_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy)
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy) 
             pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
             pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_psi_zy)
             pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
@@ -152,17 +135,13 @@ SELECT CASE (dn)
         ELSE IF ((riskavn .EQ. 2) .AND. (horizonn .EQ. 4)) THEN
             !
             limit3(2,1) = (delta_z(2)-m_zs)/psi_z
-            limit3(2,2) = (delta_z(1)-m_zs)/psi_y
+            limit3(2,2) = (delta_z(1)-m_zs)/psi_z
             limit3(2,3) = (delta_z(2)-m_zs)/psi_z
             limit3(3,3) = (delta_y(3)-m_ys)/psi_y
             limit3(2,4) = (delta_z(1)-m_zs)/psi_z
             limit3(3,4) = (delta_y(3)-m_ys)/psi_y
-!@SP            pcomp(1,1) = cdf_N01(limit3(2,1),.FALSE.) 
-!@SP            pcomp(2,1) = cdf_N01(limit3(2,2),.FALSE.) 
             pcomp(1,1) = PHID(limit3(2,1)) 
             pcomp(2,1) = PHID(limit3(2,2)) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy)
             pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
             pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_psi_zy)
             !
@@ -171,9 +150,7 @@ SELECT CASE (dn)
             limit3(3,1) = (delta_y(1)-m_ys)/psi_y
             limit3(2,2) = (delta_z(2)-m_zs)/psi_z
             limit3(3,2) = (delta_y(1)-m_ys)/psi_y
-!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
             pcomp(1,1) = PHID(limit3(3,1)) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
             pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
             !
         ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 2)) THEN
@@ -184,13 +161,9 @@ SELECT CASE (dn)
             limit3(3,3) = (delta_y(1)-m_ys)/psi_y
             limit3(2,4) = (delta_z(2)-m_zs)/psi_z
             limit3(3,4) = (delta_y(1)-m_ys)/psi_y
-!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
             pcomp(1,1) = PHID(limit3(3,1)) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
             pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
-!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
             pcomp(3,1) = PHID(limit3(3,3)) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy)
             pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_psi_zy)
             !
         ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 3)) THEN
@@ -201,13 +174,9 @@ SELECT CASE (dn)
             limit3(3,3) = (delta_y(2)-m_y)/sigma_y
             limit3(2,4) = (delta_z(2)-m_z)/sigma_z
             limit3(3,4) = (delta_y(2)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
             pcomp(1,1) = PHID(limit3(3,1)) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
             pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
-!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
             pcomp(3,1) = PHID(limit3(3,3)) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy)
             pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_psi_zy)
             !
         ELSE IF ((riskavn .EQ. 3) .AND. (horizonn .EQ. 4)) THEN
@@ -217,11 +186,8 @@ SELECT CASE (dn)
             limit3(2,4) = (delta_z(2)-m_z)/sigma_z
             limit3(3,4) = (delta_y(3)-m_y)/sigma_y
             pcomp(1,1) = 1.d0 
-!@SP            pcomp(2,1) = cdf_N01(limit3(2,2),.FALSE.)
-!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
             pcomp(2,1) = PHID(limit3(2,2))
             pcomp(3,1) = PHID(limit3(3,3)) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy)
             pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_psi_zy)
             !
         END IF
@@ -266,7 +232,6 @@ SELECT CASE (dn)
             limit3(2,1) = (delta_z(1)-m_z)/sigma_z
             limit3(2,3) = (delta_z(1)-m_z)/sigma_z
             limit3(3,3) = (delta_y(3)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(2,1),rho_sz) 
             pcomp(1,1) = BVND(-limit3(1,1),-limit3(2,1),rho_sz) 
             pcomp(3,1) = TVTL(0,limit3(:,3),corr3,eps)
             !
@@ -317,8 +282,6 @@ SELECT CASE (dn)
             limit3(3,3) = (delta_y(3)-m_y)/sigma_y
             limit3(2,4) = (delta_z(1)-m_z)/sigma_z
             limit3(3,4) = (delta_y(3)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(2,1),rho_sz) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(1,2),-limit3(2,2),rho_sz) 
             pcomp(1,1) = BVND(-limit3(1,1),-limit3(2,1),rho_sz) 
             pcomp(2,1) = BVND(-limit3(1,2),-limit3(2,2),rho_sz) 
             pcomp(3,1) = TVTL(0,limit3(:,3),corr3,eps)
@@ -329,7 +292,6 @@ SELECT CASE (dn)
             limit3(3,1) = (delta_y(1)-m_y)/sigma_y
             limit3(2,2) = (delta_z(2)-m_z)/sigma_z
             limit3(3,2) = (delta_y(1)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
             pcomp(1,1) = BVND(-limit3(1,1),-limit3(3,1),rho_sy) 
             pcomp(2,1) = TVTL(0,limit3(:,2),corr3,eps)
             !
@@ -341,10 +303,8 @@ SELECT CASE (dn)
             limit3(3,3) = (delta_y(1)-m_y)/sigma_y
             limit3(2,4) = (delta_z(2)-m_z)/sigma_z
             limit3(3,4) = (delta_y(1)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
             pcomp(1,1) = BVND(-limit3(1,1),-limit3(3,1),rho_sy) 
             pcomp(2,1) = TVTL(0,limit3(:,2),corr3,eps)
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
             pcomp(3,1) = BVND(-limit3(1,3),-limit3(3,3),rho_sy) 
             pcomp(4,1) = TVTL(0,limit3(:,4),corr3,eps)
             !
@@ -356,10 +316,8 @@ SELECT CASE (dn)
             limit3(3,3) = (delta_y(2)-m_y)/sigma_y
             limit3(2,4) = (delta_z(2)-m_z)/sigma_z
             limit3(3,4) = (delta_y(2)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
             pcomp(1,1) = BVND(-limit3(1,1),-limit3(3,1),rho_sy) 
             pcomp(2,1) = TVTL(0,limit3(:,2),corr3,eps)
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
             pcomp(3,1) = BVND(-limit3(1,3),-limit3(3,3),rho_sy) 
             pcomp(4,1) = TVTL(0,limit3(:,4),corr3,eps)
             !
@@ -370,8 +328,6 @@ SELECT CASE (dn)
             limit3(2,4) = (delta_z(2)-m_z)/sigma_z
             limit3(3,4) = (delta_y(3)-m_y)/sigma_y
             pcomp(1,1) = 1.d0 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(1,2),-limit3(2,2),rho_sz) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
             pcomp(2,1) = BVND(-limit3(1,2),-limit3(2,2),rho_sz) 
             pcomp(3,1) = BVND(-limit3(1,3),-limit3(3,3),rho_sy) 
             pcomp(4,1) = TVTL(0,limit3(:,4),corr3,eps)
@@ -393,7 +349,6 @@ SELECT CASE (dn)
             !
             limit3(2,1) = (delta_z(1)-m_z)/sigma_z
             limit3(3,1) = (delta_y(1)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
             pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_zy) 
             pcomp(1,2) = TVTL(0,limit3(:,1),corr3,eps)
             !
@@ -403,8 +358,6 @@ SELECT CASE (dn)
             limit3(3,1) = (delta_y(2)-m_y)/sigma_y
             limit3(2,3) = (delta_z(1)-m_z)/sigma_z
             limit3(3,3) = (delta_y(1)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
             pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_zy) 
             pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_zy) 
             pcomp(1,2) = TVTL(0,limit3(:,1),corr3,eps)
@@ -416,8 +369,6 @@ SELECT CASE (dn)
             limit3(3,1) = (delta_y(3)-m_y)/sigma_y
             limit3(2,3) = (delta_z(1)-m_z)/sigma_z
             limit3(3,3) = (delta_y(2)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
             pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_zy) 
             pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_zy) 
             pcomp(1,2) = TVTL(0,limit3(:,1),corr3,eps)
@@ -428,10 +379,7 @@ SELECT CASE (dn)
             limit3(2,1) = (delta_z(1)-m_z)/sigma_z
             limit3(2,3) = (delta_z(1)-m_z)/sigma_z
             limit3(3,3) = (delta_y(3)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_N01(limit3(2,1),.FALSE.) 
             pcomp(1,1) = PHID(limit3(2,1)) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
-!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(2,1),rho_sz)
             pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_zy) 
             pcomp(1,2) = BVND(-limit3(1,1),-limit3(2,1),rho_sz)
             pcomp(3,2) = TVTL(0,limit3(:,3),corr3,eps)
@@ -442,8 +390,6 @@ SELECT CASE (dn)
             limit3(3,1) = (delta_y(1)-m_y)/sigma_y
             limit3(2,2) = (delta_z(1)-m_z)/sigma_z
             limit3(3,2) = (delta_y(1)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
             pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_zy) 
             pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_zy) 
             pcomp(1,2) = TVTL(0,limit3(:,1),corr3,eps)
@@ -459,10 +405,6 @@ SELECT CASE (dn)
             limit3(3,3) = (delta_y(1)-m_y)/sigma_y
             limit3(2,4) = (delta_z(1)-m_z)/sigma_z
             limit3(3,4) = (delta_y(1)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
             pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_zy) 
             pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_zy) 
             pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_zy) 
@@ -482,10 +424,6 @@ SELECT CASE (dn)
             limit3(3,3) = (delta_y(2)-m_y)/sigma_y
             limit3(2,4) = (delta_z(1)-m_z)/sigma_z
             limit3(3,4) = (delta_y(2)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
             pcomp(1,1) = BVND(-limit3(2,1),-limit3(3,1),rho_zy) 
             pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_zy) 
             pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_zy) 
@@ -503,14 +441,8 @@ SELECT CASE (dn)
             limit3(3,3) = (delta_y(3)-m_y)/sigma_y
             limit3(2,4) = (delta_z(1)-m_z)/sigma_z
             limit3(3,4) = (delta_y(3)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_N01(limit3(2,1),.FALSE.) 
-!@SP            pcomp(2,1) = cdf_N01(limit3(2,2),.FALSE.) 
             pcomp(1,1) = PHID(limit3(2,1)) 
             pcomp(2,1) = PHID(limit3(2,2)) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
-!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(2,1),rho_sz) 
-!@SP            pcomp(2,2) = cdf_biv_N01(-limit3(1,2),-limit3(2,2),rho_sz) 
             pcomp(3,1) = BVND(-limit3(2,3),-limit3(3,3),rho_zy) 
             pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_zy) 
             pcomp(1,2) = BVND(-limit3(1,1),-limit3(2,1),rho_sz) 
@@ -523,10 +455,7 @@ SELECT CASE (dn)
             limit3(3,1) = (delta_y(1)-m_y)/sigma_y
             limit3(2,2) = (delta_z(2)-m_z)/sigma_z
             limit3(3,2) = (delta_y(1)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
             pcomp(1,1) = PHID(limit3(3,1)) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
-!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
             pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_zy) 
             pcomp(1,2) = BVND(-limit3(1,1),-limit3(3,1),rho_sy) 
             pcomp(2,2) = TVTL(0,limit3(:,2),corr3,eps)
@@ -539,18 +468,12 @@ SELECT CASE (dn)
             limit3(3,3) = (delta_y(1)-m_y)/sigma_y
             limit3(2,4) = (delta_z(2)-m_z)/sigma_z
             limit3(3,4) = (delta_y(1)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
             pcomp(1,1) = PHID(limit3(3,1)) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
             pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_zy) 
-!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
             pcomp(3,1) = PHID(limit3(3,3)) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy)
-!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
             pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_zy)
             pcomp(1,2) = BVND(-limit3(1,1),-limit3(3,1),rho_sy) 
             pcomp(2,2) = TVTL(0,limit3(:,2),corr3,eps)
-!@SP            pcomp(3,2) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
             pcomp(3,2) = BVND(-limit3(1,3),-limit3(3,3),rho_sy) 
             pcomp(4,2) = TVTL(0,limit3(:,4),corr3,eps)
             !
@@ -562,18 +485,12 @@ SELECT CASE (dn)
             limit3(3,3) = (delta_y(2)-m_y)/sigma_y
             limit3(2,4) = (delta_z(2)-m_z)/sigma_z
             limit3(3,4) = (delta_y(2)-m_y)/sigma_y
-!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
             pcomp(1,1) = PHID(limit3(3,1)) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
             pcomp(2,1) = BVND(-limit3(2,2),-limit3(3,2),rho_zy) 
-!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
             pcomp(3,1) = PHID(limit3(3,3)) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
-!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy)
             pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_zy) 
             pcomp(1,2) = BVND(-limit3(1,1),-limit3(3,1),rho_sy)
             pcomp(2,2) = TVTL(0,limit3(:,2),corr3,eps)
-!@SP            pcomp(3,2) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
             pcomp(3,2) = BVND(-limit3(1,3),-limit3(3,3),rho_sy) 
             pcomp(4,2) = TVTL(0,limit3(:,4),corr3,eps)
             !
@@ -584,16 +501,10 @@ SELECT CASE (dn)
             limit3(2,4) = (delta_z(2)-m_z)/sigma_z
             limit3(3,4) = (delta_y(3)-m_y)/sigma_y
             pcomp(1,1) = 1.d0 
-!@SP            pcomp(2,1) = cdf_N01(limit3(2,2),.FALSE.) 
-!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
             pcomp(2,1) = PHID(limit3(2,2)) 
             pcomp(3,1) = PHID(limit3(3,3)) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
             pcomp(4,1) = BVND(-limit3(2,4),-limit3(3,4),rho_zy) 
-!@SP            pcomp(1,2) = cdf_N01(limit3(1,1),.FALSE.)
             pcomp(1,2) = PHID(limit3(1,1))
-!@SP            pcomp(2,2) = cdf_biv_N01(-limit3(1,2),-limit3(2,2),rho_sz) 
-!@SP            pcomp(3,2) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
             pcomp(2,2) = BVND(-limit3(1,2),-limit3(2,2),rho_sz) 
             pcomp(3,2) = BVND(-limit3(1,3),-limit3(3,3),rho_sy) 
             pcomp(4,2) = TVTL(0,limit3(:,4),corr3,eps)

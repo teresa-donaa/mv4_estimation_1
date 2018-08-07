@@ -102,6 +102,13 @@ CONTAINS
         !
         IF ((p .LE. 0.d0) .OR. (ISNAN(p))) THEN
             !
+!@SP       
+OPEN(UNIT = unit_theta,FILE = file_theta)
+WRITE(unit_theta,10) theta
+10 FORMAT(<num_theta>(ES30.23, 1X))
+CLOSE(UNIT = unit_theta)
+CALL INDIVIDUAL_CONTRIBUTION(psi,d(n),as(n),riskav(n),horizon(n),p)
+!@SP
             error_flag = .TRUE.
             fc = 1.d10
             RETURN
@@ -130,6 +137,76 @@ CONTAINS
     ! Ending execution and returning control
     !
     END SUBROUTINE loglik_fct
+!
+! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!
+    FUNCTION loglik_politope ( theta ) 
+    !
+    ! Declaring dummy variables
+    !
+    REAL(8), INTENT(IN) :: theta(num_theta)        
+    !
+    ! Declaring local variables
+    !
+    INTEGER :: n
+    REAL(8) :: psi(num_psi), p
+    !
+    ! Declaring function's type
+    !
+    REAL(8) :: loglik_politope
+    !
+    ! Beginning execution
+    !
+    ! Initializing the loglikelihood and its gradient
+    !
+    loglik_politope = 0.d0
+    !
+    ! Beginning loop over observations
+    !
+    IF (to0 .EQ. 1) CALL open_write_file(unit_loglik,file_loglik)
+    DO n = 1, num_N
+        !
+        ! Computing individual regime probability and associated gradient
+        !
+        CALL compute_psi_parameters(x_m_s(n,:),x_m_q(n,:),x_m_y(n,:),x_sigma_s(n,:), &
+            theta,psi)
+        CALL individual_contribution(psi,d(n),as(n),riskav(n),horizon(n),p)
+        !
+        ! Adding individual contribution to total loglikelihood
+        !
+        IF ((p .LE. 0.d0) .OR. (ISNAN(p))) THEN
+            !
+!@SP       
+OPEN(UNIT = unit_theta,FILE = file_theta)
+WRITE(unit_theta,10) theta
+10 FORMAT(<num_theta>(ES30.23, 1X))
+CLOSE(UNIT = unit_theta)
+CALL INDIVIDUAL_CONTRIBUTION(psi,d(n),as(n),riskav(n),horizon(n),p)
+!@SP
+            error_flag = .TRUE.
+            loglik_politope = 1.d10
+            RETURN
+            !
+        ELSE
+            !
+            loglik_politope = loglik_politope-normpeso(n)*LOG(p)
+            !
+        END IF
+        !
+        IF (to0 .EQ. 1) THEN
+            !
+            WRITE(unit_loglik,1) n, d(n), as(n), riskav(n), horizon(n), &
+                p, loglik_politope
+1           FORMAT(I6, 1X, I3, 1X, ES15.8, 1X, <2>(I3, 1X), <2>(ES15.8, 1X))
+            !
+        END IF
+        !
+    END DO
+    CLOSE(UNIT=unit_loglik)
+    !
+    ! Ending execution and returning control
+    !
+    END FUNCTION loglik_politope
 !
 ! &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 !

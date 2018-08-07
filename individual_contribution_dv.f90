@@ -54,8 +54,9 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
   REAL*8, DIMENSION(nbdirsmax) :: rho_szd, rho_syd, rho_zyd
   REAL*8 :: gamma, kappa, q
   REAL*8, DIMENSION(nbdirsmax) :: qd
-  REAL*8 :: delta_z(num_l-1), delta_y(num_h-1)
-  REAL*8 :: delta_zd(nbdirsmax, num_l-1), delta_yd(nbdirsmax, num_h-1)
+  REAL*8 :: delta_z(num_delta_z), delta_y(num_delta_y)
+  REAL*8 :: delta_zd(nbdirsmax, num_delta_z), delta_yd(nbdirsmax, &
+& num_delta_y)
   REAL*8 :: m_zs, m_ys, psi_z, psi_y, rho_psi_zy
   REAL*8, DIMENSION(nbdirsmax) :: m_zsd, m_ysd, psi_zd, psi_yd, &
 & rho_psi_zyd
@@ -105,11 +106,11 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 !
 ! probability of self-reported risk aversion and planning horizon
 !
-      m_zsd(nd) = m_zd(nd) - ((rho_szd(nd)*sigma_z+rho_sz*sigma_zd(nd))*&
-&       sigma_s-rho_sz*sigma_z*sigma_sd(nd))*(m_s-q*asn)/sigma_s**2 - &
+      m_zsd(nd) = m_zd(nd) + ((rho_szd(nd)*sigma_z+rho_sz*sigma_zd(nd))*&
+&       sigma_s-rho_sz*sigma_z*sigma_sd(nd))*(m_s-q*asn)/sigma_s**2 + &
 &       rho_sz*sigma_z*(m_sd(nd)-asn*qd(nd))/sigma_s
-      m_ysd(nd) = m_yd(nd) - ((rho_syd(nd)*sigma_y+rho_sy*sigma_yd(nd))*&
-&       sigma_s-rho_sy*sigma_y*sigma_sd(nd))*(m_s-q*asn)/sigma_s**2 - &
+      m_ysd(nd) = m_yd(nd) + ((rho_syd(nd)*sigma_y+rho_sy*sigma_yd(nd))*&
+&       sigma_s-rho_sy*sigma_y*sigma_sd(nd))*(m_s-q*asn)/sigma_s**2 + &
 &       rho_sy*sigma_y*(m_sd(nd)-asn*qd(nd))/sigma_s
       arg2d(nd) = -(2*rho_sy*rho_syd(nd))
       IF (arg2 .EQ. 0.0) THEN
@@ -132,8 +133,8 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
       arg1d(nd) = -(2*rho_sy*rho_syd(nd))
     END DO
     p_as = result1/sigma_s
-    m_zs = m_z - rho_sz*sigma_z/sigma_s*(m_s-q*asn)
-    m_ys = m_y - rho_sy*sigma_y/sigma_s*(m_s-q*asn)
+    m_zs = m_z + rho_sz*sigma_z/sigma_s*(m_s-q*asn)
+    m_ys = m_y + rho_sy*sigma_y/sigma_s*(m_s-q*asn)
     result1 = SQRT(arg1)
     arg1 = 1.d0 - rho_sy**2
     DO nd=1,nbdirs
@@ -174,7 +175,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         1)-m_zs)*psi_zd(nd))/psi_z**2
         limit3d(nd, 3, 1) = ((delta_yd(nd, 1)-m_ysd(nd))*psi_y-(delta_y(&
 &         1)-m_ys)*psi_yd(nd))/psi_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy)
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(1)-m_zs)/psi_z
@@ -195,8 +195,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         1)-m_zs)*psi_zd(nd))/psi_z**2
         limit3d(nd, 3, 3) = ((delta_yd(nd, 1)-m_ysd(nd))*psi_y-(delta_y(&
 &         1)-m_ys)*psi_yd(nd))/psi_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy)
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(1)-m_zs)/psi_z
@@ -222,8 +220,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         1)-m_zs)*psi_zd(nd))/psi_z**2
         limit3d(nd, 3, 3) = ((delta_yd(nd, 2)-m_ysd(nd))*psi_y-(delta_y(&
 &         2)-m_ys)*psi_yd(nd))/psi_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy)
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy)
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(1)-m_zs)/psi_z
@@ -247,7 +243,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         1)-m_zs)*psi_zd(nd))/psi_z**2
         limit3d(nd, 3, 3) = ((delta_yd(nd, 3)-m_ysd(nd))*psi_y-(delta_y(&
 &         3)-m_ys)*psi_yd(nd))/psi_y**2
-!@SP            pcomp(1,1) = cdf_N01(limit3(2,1),.FALSE.) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(1)-m_zs)/psi_z
@@ -255,7 +250,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
       limit3(3, 3) = (delta_y(3)-m_ys)/psi_y
       CALL PHID_DV(limit3(2, 1), limit3d(:, 2, 1), pcomp(1, 1), pcompd(:&
 &            , 1, 1), nbdirs)
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy)
       CALL BVND_DV(-limit3(2, 3), -limit3d(:, 2, 3), -limit3(3, 3), -&
 &            limit3d(:, 3, 3), rho_psi_zy, rho_psi_zyd, pcomp(3, 1), &
 &            pcompd(:, 3, 1), nbdirs)
@@ -272,8 +266,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         1)-m_zs)*psi_zd(nd))/psi_z**2
         limit3d(nd, 3, 2) = ((delta_yd(nd, 1)-m_ysd(nd))*psi_y-(delta_y(&
 &         1)-m_ys)*psi_yd(nd))/psi_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy)
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(2)-m_zs)/psi_z
@@ -307,10 +299,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         1)-m_zs)*psi_zd(nd))/psi_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 1)-m_ysd(nd))*psi_y-(delta_y(&
 &         1)-m_ys)*psi_yd(nd))/psi_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(2)-m_zs)/psi_z
@@ -354,10 +342,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         1)-m_zs)*psi_zd(nd))/psi_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 2)-m_ysd(nd))*psi_y-(delta_y(&
 &         2)-m_ys)*psi_yd(nd))/psi_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_psi_zy) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy)
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(2)-m_zs)/psi_z
@@ -387,8 +371,8 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
         limit3d(nd, :, :) = 0.0_8
         limit3d(nd, 2, 1) = ((delta_zd(nd, 2)-m_zsd(nd))*psi_z-(delta_z(&
 &         2)-m_zs)*psi_zd(nd))/psi_z**2
-        limit3d(nd, 2, 2) = ((delta_zd(nd, 1)-m_zsd(nd))*psi_y-(delta_z(&
-&         1)-m_zs)*psi_yd(nd))/psi_y**2
+        limit3d(nd, 2, 2) = ((delta_zd(nd, 1)-m_zsd(nd))*psi_z-(delta_z(&
+&         1)-m_zs)*psi_zd(nd))/psi_z**2
         limit3d(nd, 2, 3) = ((delta_zd(nd, 2)-m_zsd(nd))*psi_z-(delta_z(&
 &         2)-m_zs)*psi_zd(nd))/psi_z**2
         limit3d(nd, 3, 3) = ((delta_yd(nd, 3)-m_ysd(nd))*psi_y-(delta_y(&
@@ -397,12 +381,10 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         1)-m_zs)*psi_zd(nd))/psi_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 3)-m_ysd(nd))*psi_y-(delta_y(&
 &         3)-m_ys)*psi_yd(nd))/psi_y**2
-!@SP            pcomp(1,1) = cdf_N01(limit3(2,1),.FALSE.) 
-!@SP            pcomp(2,1) = cdf_N01(limit3(2,2),.FALSE.) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(2)-m_zs)/psi_z
-      limit3(2, 2) = (delta_z(1)-m_zs)/psi_y
+      limit3(2, 2) = (delta_z(1)-m_zs)/psi_z
       limit3(2, 3) = (delta_z(2)-m_zs)/psi_z
       limit3(3, 3) = (delta_y(3)-m_ys)/psi_y
       limit3(2, 4) = (delta_z(1)-m_zs)/psi_z
@@ -411,8 +393,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &            , 1, 1), nbdirs)
       CALL PHID_DV(limit3(2, 2), limit3d(:, 2, 2), pcomp(2, 1), pcompd(:&
 &            , 2, 1), nbdirs)
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_psi_zy) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy)
       CALL BVND_DV(-limit3(2, 3), -limit3d(:, 2, 3), -limit3(3, 3), -&
 &            limit3d(:, 3, 3), rho_psi_zy, rho_psi_zyd, pcomp(3, 1), &
 &            pcompd(:, 3, 1), nbdirs)
@@ -430,7 +410,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         2)-m_zs)*psi_zd(nd))/psi_z**2
         limit3d(nd, 3, 2) = ((delta_yd(nd, 1)-m_ysd(nd))*psi_y-(delta_y(&
 &         1)-m_ys)*psi_yd(nd))/psi_y**2
-!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(3, 1) = (delta_y(1)-m_ys)/psi_y
@@ -438,7 +417,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
       limit3(3, 2) = (delta_y(1)-m_ys)/psi_y
       CALL PHID_DV(limit3(3, 1), limit3d(:, 3, 1), pcomp(1, 1), pcompd(:&
 &            , 1, 1), nbdirs)
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
       CALL BVND_DV(-limit3(2, 2), -limit3d(:, 2, 2), -limit3(3, 2), -&
 &            limit3d(:, 3, 2), rho_psi_zy, rho_psi_zyd, pcomp(2, 1), &
 &            pcompd(:, 2, 1), nbdirs)
@@ -459,7 +437,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         2)-m_zs)*psi_zd(nd))/psi_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 1)-m_ysd(nd))*psi_y-(delta_y(&
 &         1)-m_ys)*psi_yd(nd))/psi_y**2
-!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(3, 1) = (delta_y(2)-m_ys)/psi_y
@@ -470,14 +447,11 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
       limit3(3, 4) = (delta_y(1)-m_ys)/psi_y
       CALL PHID_DV(limit3(3, 1), limit3d(:, 3, 1), pcomp(1, 1), pcompd(:&
 &            , 1, 1), nbdirs)
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
       CALL BVND_DV(-limit3(2, 2), -limit3d(:, 2, 2), -limit3(3, 2), -&
 &            limit3d(:, 3, 2), rho_psi_zy, rho_psi_zyd, pcomp(2, 1), &
 &            pcompd(:, 2, 1), nbdirs)
-!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
       CALL PHID_DV(limit3(3, 3), limit3d(:, 3, 3), pcomp(3, 1), pcompd(:&
 &            , 3, 1), nbdirs)
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy)
       CALL BVND_DV(-limit3(2, 4), -limit3d(:, 2, 4), -limit3(3, 4), -&
 &            limit3d(:, 3, 4), rho_psi_zy, rho_psi_zyd, pcomp(4, 1), &
 &            pcompd(:, 4, 1), nbdirs)
@@ -498,7 +472,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (2)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 2)-m_yd(nd))*sigma_y-(delta_y&
 &         (2)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(3, 1) = (delta_y(3)-m_y)/sigma_y
@@ -509,14 +482,11 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
       limit3(3, 4) = (delta_y(2)-m_y)/sigma_y
       CALL PHID_DV(limit3(3, 1), limit3d(:, 3, 1), pcomp(1, 1), pcompd(:&
 &            , 1, 1), nbdirs)
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_psi_zy) 
       CALL BVND_DV(-limit3(2, 2), -limit3d(:, 2, 2), -limit3(3, 2), -&
 &            limit3d(:, 3, 2), rho_psi_zy, rho_psi_zyd, pcomp(2, 1), &
 &            pcompd(:, 2, 1), nbdirs)
-!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
       CALL PHID_DV(limit3(3, 3), limit3d(:, 3, 3), pcomp(3, 1), pcompd(:&
 &            , 3, 1), nbdirs)
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy)
       CALL BVND_DV(-limit3(2, 4), -limit3d(:, 2, 4), -limit3(3, 4), -&
 &            limit3d(:, 3, 4), rho_psi_zy, rho_psi_zyd, pcomp(4, 1), &
 &            pcompd(:, 4, 1), nbdirs)
@@ -533,8 +503,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (2)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 3)-m_yd(nd))*sigma_y-(delta_y&
 &         (3)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(2,1) = cdf_N01(limit3(2,2),.FALSE.)
-!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 2) = (delta_z(2)-m_z)/sigma_z
@@ -546,7 +514,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &            , 2, 1), nbdirs)
       CALL PHID_DV(limit3(3, 3), limit3d(:, 3, 3), pcomp(3, 1), pcompd(:&
 &            , 3, 1), nbdirs)
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_psi_zy)
       CALL BVND_DV(-limit3(2, 4), -limit3d(:, 2, 4), -limit3(3, 4), -&
 &            limit3d(:, 3, 4), rho_psi_zy, rho_psi_zyd, pcomp(4, 1), &
 &            pcompd(:, 4, 1), nbdirs)
@@ -646,7 +613,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (1)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 3) = ((delta_yd(nd, 3)-m_yd(nd))*sigma_y-(delta_y&
 &         (3)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(2,1),rho_sz) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(1)-m_z)/sigma_z
@@ -771,8 +737,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (1)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 3)-m_yd(nd))*sigma_y-(delta_y&
 &         (3)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(2,1),rho_sz) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(1,2),-limit3(2,2),rho_sz) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(2)-m_z)/sigma_z
@@ -801,7 +765,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (2)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 2) = ((delta_yd(nd, 1)-m_yd(nd))*sigma_y-(delta_y&
 &         (1)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(3, 1) = (delta_y(1)-m_y)/sigma_y
@@ -828,7 +791,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (2)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 1)-m_yd(nd))*sigma_y-(delta_y&
 &         (1)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(3, 1) = (delta_y(2)-m_y)/sigma_y
@@ -842,7 +804,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &            , 1), nbdirs)
       CALL TVTL_DV(0, limit3(:, 2), limit3d(:, :, 2), corr3, corr3d, eps&
 &            , pcomp(2, 1), pcompd(:, 2, 1), nbdirs)
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
       CALL BVND_DV(-limit3(1, 3), -limit3d(:, 1, 3), -limit3(3, 3), -&
 &            limit3d(:, 3, 3), rho_sy, rho_syd, pcomp(3, 1), pcompd(:, 3&
 &            , 1), nbdirs)
@@ -864,7 +825,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (2)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 2)-m_yd(nd))*sigma_y-(delta_y&
 &         (2)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(3, 1) = (delta_y(3)-m_y)/sigma_y
@@ -878,7 +838,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &            , 1), nbdirs)
       CALL TVTL_DV(0, limit3(:, 2), limit3d(:, :, 2), corr3, corr3d, eps&
 &            , pcomp(2, 1), pcompd(:, 2, 1), nbdirs)
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
       CALL BVND_DV(-limit3(1, 3), -limit3d(:, 1, 3), -limit3(3, 3), -&
 &            limit3d(:, 3, 3), rho_sy, rho_syd, pcomp(3, 1), pcompd(:, 3&
 &            , 1), nbdirs)
@@ -896,8 +855,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (2)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 3)-m_yd(nd))*sigma_y-(delta_y&
 &         (3)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(1,2),-limit3(2,2),rho_sz) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 2) = (delta_z(2)-m_z)/sigma_z
@@ -952,7 +909,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (1)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 1) = ((delta_yd(nd, 1)-m_yd(nd))*sigma_y-(delta_y&
 &         (1)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(1)-m_z)/sigma_z
@@ -974,8 +930,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (1)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 3) = ((delta_yd(nd, 1)-m_yd(nd))*sigma_y-(delta_y&
 &         (1)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(1)-m_z)/sigma_z
@@ -1004,8 +958,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (1)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 3) = ((delta_yd(nd, 2)-m_yd(nd))*sigma_y-(delta_y&
 &         (2)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(1)-m_z)/sigma_z
@@ -1032,7 +984,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (1)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 3) = ((delta_yd(nd, 3)-m_yd(nd))*sigma_y-(delta_y&
 &         (3)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_N01(limit3(2,1),.FALSE.) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(1)-m_z)/sigma_z
@@ -1040,8 +991,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
       limit3(3, 3) = (delta_y(3)-m_y)/sigma_y
       CALL PHID_DV(limit3(2, 1), limit3d(:, 2, 1), pcomp(1, 1), pcompd(:&
 &            , 1, 1), nbdirs)
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
-!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(2,1),rho_sz)
       CALL BVND_DV(-limit3(2, 3), -limit3d(:, 2, 3), -limit3(3, 3), -&
 &            limit3d(:, 3, 3), rho_zy, rho_zyd, pcomp(3, 1), pcompd(:, 3&
 &            , 1), nbdirs)
@@ -1062,8 +1011,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (1)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 2) = ((delta_yd(nd, 1)-m_yd(nd))*sigma_y-(delta_y&
 &         (1)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(2)-m_z)/sigma_z
@@ -1100,10 +1047,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (1)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 1)-m_yd(nd))*sigma_y-(delta_y&
 &         (1)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(2)-m_z)/sigma_z
@@ -1154,10 +1097,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (1)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 2)-m_yd(nd))*sigma_y-(delta_y&
 &         (2)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_biv_N01(-limit3(2,1),-limit3(3,1),rho_zy) 
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(2)-m_z)/sigma_z
@@ -1204,8 +1143,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (1)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 3)-m_yd(nd))*sigma_y-(delta_y&
 &         (3)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_N01(limit3(2,1),.FALSE.) 
-!@SP            pcomp(2,1) = cdf_N01(limit3(2,2),.FALSE.) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 1) = (delta_z(2)-m_z)/sigma_z
@@ -1218,10 +1155,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &            , 1, 1), nbdirs)
       CALL PHID_DV(limit3(2, 2), limit3d(:, 2, 2), pcomp(2, 1), pcompd(:&
 &            , 2, 1), nbdirs)
-!@SP            pcomp(3,1) = cdf_biv_N01(-limit3(2,3),-limit3(3,3),rho_zy) 
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
-!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(2,1),rho_sz) 
-!@SP            pcomp(2,2) = cdf_biv_N01(-limit3(1,2),-limit3(2,2),rho_sz) 
       CALL BVND_DV(-limit3(2, 3), -limit3d(:, 2, 3), -limit3(3, 3), -&
 &            limit3d(:, 3, 3), rho_zy, rho_zyd, pcomp(3, 1), pcompd(:, 3&
 &            , 1), nbdirs)
@@ -1248,7 +1181,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (2)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 2) = ((delta_yd(nd, 1)-m_yd(nd))*sigma_y-(delta_y&
 &         (1)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(3, 1) = (delta_y(1)-m_y)/sigma_y
@@ -1256,8 +1188,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
       limit3(3, 2) = (delta_y(1)-m_y)/sigma_y
       CALL PHID_DV(limit3(3, 1), limit3d(:, 3, 1), pcomp(1, 1), pcompd(:&
 &            , 1, 1), nbdirs)
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
-!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
       CALL BVND_DV(-limit3(2, 2), -limit3d(:, 2, 2), -limit3(3, 2), -&
 &            limit3d(:, 3, 2), rho_zy, rho_zyd, pcomp(2, 1), pcompd(:, 2&
 &            , 1), nbdirs)
@@ -1282,7 +1212,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (2)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 1)-m_yd(nd))*sigma_y-(delta_y&
 &         (1)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(3, 1) = (delta_y(2)-m_y)/sigma_y
@@ -1293,15 +1222,11 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
       limit3(3, 4) = (delta_y(1)-m_y)/sigma_y
       CALL PHID_DV(limit3(3, 1), limit3d(:, 3, 1), pcomp(1, 1), pcompd(:&
 &            , 1, 1), nbdirs)
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
       CALL BVND_DV(-limit3(2, 2), -limit3d(:, 2, 2), -limit3(3, 2), -&
 &            limit3d(:, 3, 2), rho_zy, rho_zyd, pcomp(2, 1), pcompd(:, 2&
 &            , 1), nbdirs)
-!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
       CALL PHID_DV(limit3(3, 3), limit3d(:, 3, 3), pcomp(3, 1), pcompd(:&
 &            , 3, 1), nbdirs)
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy)
-!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy) 
       CALL BVND_DV(-limit3(2, 4), -limit3d(:, 2, 4), -limit3(3, 4), -&
 &            limit3d(:, 3, 4), rho_zy, rho_zyd, pcomp(4, 1), pcompd(:, 4&
 &            , 1), nbdirs)
@@ -1310,7 +1235,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &            , 2), nbdirs)
       CALL TVTL_DV(0, limit3(:, 2), limit3d(:, :, 2), corr3, corr3d, eps&
 &            , pcomp(2, 2), pcompd(:, 2, 2), nbdirs)
-!@SP            pcomp(3,2) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
       CALL BVND_DV(-limit3(1, 3), -limit3d(:, 1, 3), -limit3(3, 3), -&
 &            limit3d(:, 3, 3), rho_sy, rho_syd, pcomp(3, 2), pcompd(:, 3&
 &            , 2), nbdirs)
@@ -1332,7 +1256,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (2)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 2)-m_yd(nd))*sigma_y-(delta_y&
 &         (2)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(1,1) = cdf_N01(limit3(3,1),.FALSE.) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(3, 1) = (delta_y(3)-m_y)/sigma_y
@@ -1343,15 +1266,11 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
       limit3(3, 4) = (delta_y(2)-m_y)/sigma_y
       CALL PHID_DV(limit3(3, 1), limit3d(:, 3, 1), pcomp(1, 1), pcompd(:&
 &            , 1, 1), nbdirs)
-!@SP            pcomp(2,1) = cdf_biv_N01(-limit3(2,2),-limit3(3,2),rho_zy) 
       CALL BVND_DV(-limit3(2, 2), -limit3d(:, 2, 2), -limit3(3, 2), -&
 &            limit3d(:, 3, 2), rho_zy, rho_zyd, pcomp(2, 1), pcompd(:, 2&
 &            , 1), nbdirs)
-!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
       CALL PHID_DV(limit3(3, 3), limit3d(:, 3, 3), pcomp(3, 1), pcompd(:&
 &            , 3, 1), nbdirs)
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
-!@SP            pcomp(1,2) = cdf_biv_N01(-limit3(1,1),-limit3(3,1),rho_sy)
       CALL BVND_DV(-limit3(2, 4), -limit3d(:, 2, 4), -limit3(3, 4), -&
 &            limit3d(:, 3, 4), rho_zy, rho_zyd, pcomp(4, 1), pcompd(:, 4&
 &            , 1), nbdirs)
@@ -1360,7 +1279,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &            , 2), nbdirs)
       CALL TVTL_DV(0, limit3(:, 2), limit3d(:, :, 2), corr3, corr3d, eps&
 &            , pcomp(2, 2), pcompd(:, 2, 2), nbdirs)
-!@SP            pcomp(3,2) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
       CALL BVND_DV(-limit3(1, 3), -limit3d(:, 1, 3), -limit3(3, 3), -&
 &            limit3d(:, 3, 3), rho_sy, rho_syd, pcomp(3, 2), pcompd(:, 3&
 &            , 2), nbdirs)
@@ -1378,8 +1296,6 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &         (2)-m_z)*sigma_zd(nd))/sigma_z**2
         limit3d(nd, 3, 4) = ((delta_yd(nd, 3)-m_yd(nd))*sigma_y-(delta_y&
 &         (3)-m_y)*sigma_yd(nd))/sigma_y**2
-!@SP            pcomp(2,1) = cdf_N01(limit3(2,2),.FALSE.) 
-!@SP            pcomp(3,1) = cdf_N01(limit3(3,3),.FALSE.) 
         pcompd(nd, :, :) = 0.0_8
       END DO
       limit3(2, 2) = (delta_z(2)-m_z)/sigma_z
@@ -1391,15 +1307,11 @@ SUBROUTINE INDIVIDUAL_CONTRIBUTION_DV(psi, psid, dn, asn, riskavn, &
 &            , 2, 1), nbdirs)
       CALL PHID_DV(limit3(3, 3), limit3d(:, 3, 3), pcomp(3, 1), pcompd(:&
 &            , 3, 1), nbdirs)
-!@SP            pcomp(4,1) = cdf_biv_N01(-limit3(2,4),-limit3(3,4),rho_zy) 
       CALL BVND_DV(-limit3(2, 4), -limit3d(:, 2, 4), -limit3(3, 4), -&
 &            limit3d(:, 3, 4), rho_zy, rho_zyd, pcomp(4, 1), pcompd(:, 4&
 &            , 1), nbdirs)
-!@SP            pcomp(1,2) = cdf_N01(limit3(1,1),.FALSE.)
       CALL PHID_DV(limit3(1, 1), limit3d(:, 1, 1), pcomp(1, 2), pcompd(:&
 &            , 1, 2), nbdirs)
-!@SP            pcomp(2,2) = cdf_biv_N01(-limit3(1,2),-limit3(2,2),rho_sz) 
-!@SP            pcomp(3,2) = cdf_biv_N01(-limit3(1,3),-limit3(3,3),rho_sy) 
       CALL BVND_DV(-limit3(1, 2), -limit3d(:, 1, 2), -limit3(2, 2), -&
 &            limit3d(:, 2, 2), rho_sz, rho_szd, pcomp(2, 2), pcompd(:, 2&
 &            , 2), nbdirs)
