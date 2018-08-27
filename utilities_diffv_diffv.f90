@@ -318,7 +318,7 @@ CONTAINS
     m_q = psi(2)
     m_y = psi(3)
     m_z = LOG(gamma)
-    sigma_s = EXP(psi(num_psi_m+1))
+    sigma_s = minimum_sigma_s+EXP(psi(num_psi_m+1))
     ipsi = num_psi_m + 1
 !
 ! sigma_z
@@ -739,7 +739,7 @@ CONTAINS
     m_q = psi(2)
     m_y = psi(3)
     m_z = LOG(gamma)
-    sigma_s = EXP(psi(num_psi_m+1))
+    sigma_s = minimum_sigma_s+EXP(psi(num_psi_m+1))
     ipsi = num_psi_m + 1
 !
 ! sigma_z
@@ -959,7 +959,7 @@ CONTAINS
 !
 ! sigma_s
 !
-    sigma_s = EXP(psi(num_psi_m+1))
+    sigma_s = minimum_sigma_s+EXP(psi(num_psi_m+1))
     ipsi = num_psi_m + 1
 !
 ! sigma_z

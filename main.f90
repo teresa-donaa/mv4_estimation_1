@@ -16,8 +16,7 @@ IMPLICIT NONE
 ! Declaring variables
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !
-CHARACTER (len = 12) :: date_char(3)        ! Not used
-INTEGER :: itime(8)                         ! Starting date
+CHARACTER(len = 2) :: ichar
 INTEGER :: seed(2)                          ! Seed for r.n. generation
 INTEGER :: i_stime                          ! Estimation trial loop index
 REAL(8) :: llcheck
@@ -47,12 +46,13 @@ IF (compute_var_as .EQ. 0) THEN
     !
     ! Initializing random number generator
     !
-!@SP
-!    CALL date_and_time(date_char(1),date_char(2),date_char(3),itime)
-!    seed(1) = itime(7)*itime(8)
-!    seed(2) = itime(5)*itime(6)
-    seed = 1
-!@SP
+    IF (to1 .EQ. 1) THEN
+        !
+        CALL GETARG(1,ichar)
+        seed = INUM(ichar)
+        IF (ALL(seed .EQ. 0)) seed = 1
+        !
+    END IF
     !
     ! Starting loop 
     !
