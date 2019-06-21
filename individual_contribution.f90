@@ -51,7 +51,7 @@ SELECT CASE (dn)
         ! 
         ! density of a_s
         ! 
-        p_as = pdf_N01((q*asn-m_s)/sigma_s)/sigma_s
+        p_as = pdf_N01((asn-m_s/q)/(sigma_s/q))/(sigma_s/q)
         !
         ! probability of self-reported risk aversion and planning horizon
         !

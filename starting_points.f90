@@ -82,6 +82,7 @@ CONTAINS
         !
         CALL GETARG(1,ichar)
         i = INUM(ichar)
+        IF (i .EQ. 0) i = 3
         !
         CALL open_read_file(unit_res_to2,file_res_to2)
         IF (i .GT. 1) THEN
